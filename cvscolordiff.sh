@@ -1,2 +1,2 @@
 #!/bin/sh
-cvs diff -bup "$@" | colordiff | less -r
+cvs diff -bup "$@" | colordiff | less -R
