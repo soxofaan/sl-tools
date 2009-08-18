@@ -1,2 +1,2 @@
 #!/bin/sh
-svn diff --diff-cmd colordiff -x "-u -b -p" "$@" | less -R
+svn diff --diff-cmd colordiff -x "-u --ignore-all-space -p" "$@" | less -R
