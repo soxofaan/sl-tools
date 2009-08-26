@@ -67,7 +67,7 @@ class PathPermissions(object):
 		return st_mode
 
 	def __str__(self):
-		return str(self.user) + str(self.group) + str(self.other)
+		return ['-', 'd'][self.is_dir] + str(self.user) + str(self.group) + str(self.other)
 
 	def __repr__(self):
 		return "Permissions(%s)" % oct(self.get_st_mode())
@@ -114,7 +114,7 @@ class PermissionChecker(object):
 				orig_perm = PathPermissions(path)
 				sugg_perm = orig_perm.get_fixed_permission()
 				if orig_perm != sugg_perm:
-					print '-' + str(orig_perm), '->', '-' + str(sugg_perm), path
+					print str(orig_perm), '->', str(sugg_perm), path
 
 if __name__ == '__main__':
 	PermissionChecker().check('.')
