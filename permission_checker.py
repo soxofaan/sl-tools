@@ -40,7 +40,8 @@ class PermissionChecker(object):
 				problems += self.check_file_execute_permissions(m)
 				# report
 				if len(problems) > 0:
-					print oct(m), '-' + pretty_permission(m), os.path.join(root, f)
+					print oct(m), '-' + pretty_permission(m), f
+
 			for d in dirs:
 				d = os.path.join(root, d)
 				m = os.stat(f).st_mode
@@ -51,7 +52,7 @@ class PermissionChecker(object):
 				problems += self.check_dir_execute_permissions(m)
 				# report
 				if len(problems) > 0:
-					print oct(m), 'd' + pretty_permission(m), os.path.join(root, f)
+					print oct(m), 'd' + pretty_permission(m), d
 
 
 
