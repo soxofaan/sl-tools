@@ -123,7 +123,7 @@ def check_permissions(top, fix=False):
 
 if __name__ == '__main__':
 	from optparse import OptionParser
-	parser = OptionParser()
+	parser = OptionParser(usage="usage: %prog [options] [paths to check]")
 	parser.add_option("-f", "--fix",
 		action="store_true", dest="fix", default=False,
 		help="Also fix the found permission problems")
