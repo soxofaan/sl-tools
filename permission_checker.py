@@ -33,60 +33,71 @@ class PermissionChecker(object):
 			for f in files:
 				f = os.path.join(root, f)
 				m = os.stat(f).st_mode
-				# check
-				problems = []
-				problems += self.check_read_permissions(m)
-				problems += self.check_write_permissions(m)
-				problems += self.check_file_execute_permissions(m)
-				# report
-				if len(problems) > 0:
-					print oct(m), '-' + pretty_permission(m), f
+				# Check.
+				suggestion = m
+				suggestion = suggestion & self.check_read_permissions(m)[1]
+				suggestion = suggestion & self.check_write_permissions(m)[1]
+				suggestion = suggestion & self.check_file_execute_permissions(m)[1]
+				# Report
+				if m != suggestion:
+					print '-' + pretty_permission(m), '->', '-' + pretty_permission(suggestion), f
 
 			for d in dirs:
 				d = os.path.join(root, d)
 				m = os.stat(f).st_mode
-				# check
-				problems = []
-				problems += self.check_read_permissions(m)
-				problems += self.check_write_permissions(m)
-				problems += self.check_dir_execute_permissions(m)
-				# report
-				if len(problems) > 0:
-					print oct(m), 'd' + pretty_permission(m), d
-
+				# Check.
+				suggestion = m
+				suggestion = suggestion & self.check_read_permissions(m)[1]
+				suggestion = suggestion & self.check_write_permissions(m)[1]
+				suggestion = suggestion & self.check_dir_execute_permissions(m)[1]
+				# Report
+				if m != suggestion:
+					print 'd' + pretty_permission(m), '->', '-' + pretty_permission(suggestion), d
 
 
 	def check_read_permissions(self, st_mode):
 		problems = []
+		suggestion = st_mode
 		if not st_mode & stat.S_IRUSR and st_mode & stat.S_IRGRP:
 			problems.append("not readable for user but readable for group")
+			suggestion = suggestion & ~stat.S_IRGRP
 		if not st_mode & stat.S_IRUSR and st_mode & stat.S_IROTH:
 			problems.append("not readable for user but readable for other")
-		return problems
+			suggestion = suggestion & ~stat.S_IROTH
+		return problems, suggestion
 
 	def check_write_permissions(self, st_mode):
 		problems = []
+		suggestion = st_mode
 		if st_mode & stat.S_IWGRP:
 			problems.append("writable for groups")
+			suggestion = suggestion & ~stat.S_IWGRP
 		if st_mode & stat.S_IWOTH:
 			problems.append("writable for other")
-		return problems
+			suggestion = suggestion & ~stat.S_IWOTH
+		return problems, suggestion
 
 	def check_file_execute_permissions(self, st_mode):
 		problems = []
+		suggestion = st_mode
 		if st_mode & stat.S_IXGRP:
 			problems.append("executable for group")
+			suggestion = suggestion & ~stat.S_IXGRP
 		if st_mode & stat.S_IXOTH:
 			problems.append("executable for other")
-		return problems
+			suggestion = suggestion & ~stat.S_IXOTH
+		return problems, suggestion
 
 	def check_dir_execute_permissions(self, st_mode):
 		problems = []
+		suggestion = st_mode
 		if not st_mode & stat.S_IXUSR and st_mode & stat.S_IXGRP:
 			problems.append("not executable for user but executable for group")
+			suggestion = suggestion & ~stat.S_IXGRP
 		if not st_mode & stat.S_IXUSR and st_mode & stat.S_IXOTH:
 			problems.append("not executable for user but executable for other")
-		return problems
+			suggestion = suggestion & ~stat.S_IXOTH
+		return problems, suggestion
 
 
 
