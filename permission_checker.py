@@ -10,7 +10,7 @@ and directorys that are not 755 or more secure.
 
 import os
 import stat
-
+import copy
 
 def pretty_permission(m):
 	'''pretty permission string for stat mode m'''
@@ -77,27 +77,30 @@ class PathPermissions(object):
 	def __ne__(self, other):
 		return self.user != other.user or self.group != other.group or self.other != other.other
 
-	def fix(self):
+	def get_fixed_permission(self):
 		'''Analyse the permissions and fix them.'''
+		# First make a deep copy of self to work on.
+		p = copy.deepcopy(self)
 		# 777 should probably be 644 for files or 755 for dirs
-		if self.get_st_mode() == 0777:
-			self.group.w = False
-			self.other.w = False
-			if not self.is_dir:
-				self.user.x = False
-				self.group.x = False
-				self.other.x = False
-		# Other can have at most the permissions of groups and user.
+		if p.get_st_mode() == 0777:
+			p.group.w = False
+			p.other.w = False
+			if not p.is_dir:
+				p.user.x = False
+				p.group.x = False
+				p.other.x = False
+		# Group can have at most the permissions of user, and other at most those of group.
 		for type in ['r', 'w', 'r']:
-			self.group.__dict__[type] = self.group.__dict__[type] and self.user.__dict__[type]
-			self.other.__dict__[type] = self.other.__dict__[type] and self.group.__dict__[type]
+			p.group.__dict__[type] = p.group.__dict__[type] and p.user.__dict__[type]
+			p.other.__dict__[type] = p.other.__dict__[type] and p.group.__dict__[type]
 		# Files nor directories should not be writable to group and other.
-		self.group.w = False
-		self.other.w = False
+		p.group.w = False
+		p.other.w = False
 		# Files should not be executable by group and other.
-		if not self.is_dir:
-			self.group.x = False
-			self.other.x = False
+		if not p.is_dir:
+			p.group.x = False
+			p.other.x = False
+		return p
 
 
 class PermissionChecker(object):
@@ -109,8 +112,7 @@ class PermissionChecker(object):
 			for item in files + dirs:
 				path = os.path.join(root, item)
 				orig_perm = PathPermissions(path)
-				sugg_perm = PathPermissions(path)
-				sugg_perm.fix()
+				sugg_perm = orig_perm.get_fixed_permission()
 				if orig_perm != sugg_perm:
 					print '-' + str(orig_perm), '->', '-' + str(sugg_perm), path
 
