@@ -26,7 +26,8 @@ def pretty_permission(m):
 
 class PersonaPermission(object):
 	'''
-	Helper class to contain the permissions assocated to a persona (user, group or other)
+	Helper class to contain the read, write and execute permissions
+	associated to a persona (user, group or other).
 	'''
 	def __init__(self, r, w, x):
 		self.r = bool(r)
@@ -43,11 +44,18 @@ class PersonaPermission(object):
 	def __ne__(self, other):
 		return self.r != other.r or self.w != other.w or self.x != other.x
 
-class Permissions(object):
+class PathPermissions(object):
 	'''
-	Class for managing user, group and other permissions.
+	Class for managing user, group and other permissions for a given path.
 	'''
-	def __init__(self, st_mode=0644):
+
+	def __init__(self, path):
+		'''
+		Initialise the permissions for a given path.
+		'''
+		self.path = path
+		st_mode = os.stat(path).st_mode
+		self.is_dir = stat.S_ISDIR(st_mode)
 		self.user = PersonaPermission(r=st_mode & stat.S_IRUSR, w=st_mode & stat.S_IWUSR, x=st_mode & stat.S_IXUSR)
 		self.group = PersonaPermission(r=st_mode & stat.S_IRGRP, w=st_mode & stat.S_IWGRP, x=st_mode & stat.S_IXGRP)
 		self.other = PersonaPermission(r=st_mode & stat.S_IROTH, w=st_mode & stat.S_IWOTH, x=st_mode & stat.S_IXOTH)
@@ -69,13 +77,13 @@ class Permissions(object):
 	def __ne__(self, other):
 		return self.user != other.user or self.group != other.group or self.other != other.other
 
-	def fix(self, dir_mode=False):
+	def fix(self):
 		'''Analyse the permissions and fix them.'''
 		# 777 should probably be 644 for files or 755 for dirs
 		if self.get_st_mode() == 0777:
 			self.group.w = False
 			self.other.w = False
-			if not dir_mode:
+			if not self.is_dir:
 				self.user.x = False
 				self.group.x = False
 				self.other.x = False
@@ -87,7 +95,7 @@ class Permissions(object):
 		self.group.w = False
 		self.other.w = False
 		# Files should not be executable by group and other.
-		if not dir_mode:
+		if not self.is_dir:
 			self.group.x = False
 			self.other.x = False
 
@@ -98,23 +106,13 @@ class PermissionChecker(object):
 
 	def check(self, top):
 		for root, dirs, files in os.walk(top):
-			for f in files:
-				f = os.path.join(root, f)
-				orig_perm = Permissions(os.stat(f).st_mode)
-				sugg_perm = Permissions(os.stat(f).st_mode)
-				sugg_perm.fix(dir_mode=False)
+			for item in files + dirs:
+				path = os.path.join(root, item)
+				orig_perm = PathPermissions(path)
+				sugg_perm = PathPermissions(path)
+				sugg_perm.fix()
 				if orig_perm != sugg_perm:
-					print '-' + str(orig_perm), '->', '-' + str(sugg_perm), f
-
-			for d in dirs:
-				d = os.path.join(root, d)
-				orig_perm = Permissions(os.stat(d).st_mode)
-				sugg_perm = Permissions(os.stat(d).st_mode)
-				sugg_perm.fix(dir_mode=True)
-				if orig_perm != sugg_perm:
-					print '-' + str(orig_perm), '->', '-' + str(sugg_perm), d
-
-
+					print '-' + str(orig_perm), '->', '-' + str(sugg_perm), path
 
 if __name__ == '__main__':
 	PermissionChecker().check('.')
