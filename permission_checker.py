@@ -111,10 +111,14 @@ def check_permissions(top, fix=False):
 			sugg_perm = orig_perm.get_fixed_permission()
 			if orig_perm != sugg_perm:
 				if fix:
-					print str(orig_perm), 'fixed to', str(sugg_perm), path
-					os.chmod(path, sugg_perm.get_st_mode())
+					try:
+						os.chmod(path, sugg_perm.get_st_mode())
+						print str(orig_perm), 'fixed to', str(sugg_perm), path
+					except OSError:
+						print 'failed to fix', str(orig_perm), 'to', str(sugg_perm), path
+
 				else :
-					print str(orig_perm), 'suggested:', str(sugg_perm), path
+					print str(orig_perm), '(suggested: ' + str(sugg_perm) +')', path
 
 
 if __name__ == '__main__':
