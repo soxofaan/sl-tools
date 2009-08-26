@@ -24,6 +24,74 @@ def pretty_permission(m):
 	s += r[m & stat.S_IROTH > 0] + w[m & stat.S_IWOTH > 0] + x[m & stat.S_IXOTH > 0]
 	return s
 
+class PersonaPermission(object):
+	'''
+	Helper class to contain the permissions assocated to a persona (user, group or other)
+	'''
+	def __init__(self, r, w, x):
+		self.r = bool(r)
+		self.w = bool(w)
+		self.x = bool(x)
+	def __str__(self):
+		return ['-', 'r'][self.r] + ['-', 'w'][self.w] + ['-', 'x'][self.x]
+	def __repr__(self):
+		return "PersonaPermission(r=%s, w=%s, x=%s)" % (self.r, self.w, self.x)
+
+	def __eq__(self, other):
+		return self.r == other.r and self.w == other.w and self.x == other.x
+
+	def __ne__(self, other):
+		return self.r != other.r or self.w != other.w or self.x != other.x
+
+class Permissions(object):
+	'''
+	Class for managing user, group and other permissions.
+	'''
+	def __init__(self, st_mode=0644):
+		self.user = PersonaPermission(r=st_mode & stat.S_IRUSR, w=st_mode & stat.S_IWUSR, x=st_mode & stat.S_IXUSR)
+		self.group = PersonaPermission(r=st_mode & stat.S_IRGRP, w=st_mode & stat.S_IWGRP, x=st_mode & stat.S_IXGRP)
+		self.other = PersonaPermission(r=st_mode & stat.S_IROTH, w=st_mode & stat.S_IWOTH, x=st_mode & stat.S_IXOTH)
+
+	def get_st_mode(self):
+		st_mode = self.user.r * stat.S_IRUSR + self.user.w * stat.S_IWUSR + self.user.x * stat.S_IXUSR
+		st_mode += self.group.r * stat.S_IRGRP + self.group.w * stat.S_IWGRP + self.group.x * stat.S_IXGRP
+		st_mode += self.other.r * stat.S_IROTH + self.other.w * stat.S_IWOTH + self.other.x * stat.S_IXOTH
+		return st_mode
+
+	def __str__(self):
+		return str(self.user) + str(self.group) + str(self.other)
+
+	def __repr__(self):
+		return "Permissions(%s)" % oct(self.get_st_mode())
+
+	def __eq__(self, other):
+		return self.user == other.user and self.group == other.group and self.other == other.other
+	def __ne__(self, other):
+		return self.user != other.user or self.group != other.group or self.other != other.other
+
+	def fix(self, dir_mode=False):
+		'''Analyse the permissions and fix them.'''
+		# 777 should probably be 644 for files or 755 for dirs
+		if self.get_st_mode() == 0777:
+			self.group.w = False
+			self.other.w = False
+			if not dir_mode:
+				self.user.x = False
+				self.group.x = False
+				self.other.x = False
+		# Other can have at most the permissions of groups and user.
+		for type in ['r', 'w', 'r']:
+			self.group.__dict__[type] = self.group.__dict__[type] and self.user.__dict__[type]
+			self.other.__dict__[type] = self.other.__dict__[type] and self.group.__dict__[type]
+		# Files nor directories should not be writable to group and other.
+		self.group.w = False
+		self.other.w = False
+		# Files should not be executable by group and other.
+		if not dir_mode:
+			self.group.x = False
+			self.other.x = False
+
+
 class PermissionChecker(object):
 	def __init__(self):
 		pass
@@ -32,73 +100,19 @@ class PermissionChecker(object):
 		for root, dirs, files in os.walk(top):
 			for f in files:
 				f = os.path.join(root, f)
-				m = os.stat(f).st_mode
-				# Check.
-				suggestion = m
-				suggestion = suggestion & self.check_read_permissions(m)[1]
-				suggestion = suggestion & self.check_write_permissions(m)[1]
-				suggestion = suggestion & self.check_file_execute_permissions(m)[1]
-				# Report
-				if m != suggestion:
-					print '-' + pretty_permission(m), '->', '-' + pretty_permission(suggestion), f
+				orig_perm = Permissions(os.stat(f).st_mode)
+				sugg_perm = Permissions(os.stat(f).st_mode)
+				sugg_perm.fix(dir_mode=False)
+				if orig_perm != sugg_perm:
+					print '-' + str(orig_perm), '->', '-' + str(sugg_perm), f
 
 			for d in dirs:
 				d = os.path.join(root, d)
-				m = os.stat(f).st_mode
-				# Check.
-				suggestion = m
-				suggestion = suggestion & self.check_read_permissions(m)[1]
-				suggestion = suggestion & self.check_write_permissions(m)[1]
-				suggestion = suggestion & self.check_dir_execute_permissions(m)[1]
-				# Report
-				if m != suggestion:
-					print 'd' + pretty_permission(m), '->', '-' + pretty_permission(suggestion), d
-
-
-	def check_read_permissions(self, st_mode):
-		problems = []
-		suggestion = st_mode
-		if not st_mode & stat.S_IRUSR and st_mode & stat.S_IRGRP:
-			problems.append("not readable for user but readable for group")
-			suggestion = suggestion & ~stat.S_IRGRP
-		if not st_mode & stat.S_IRUSR and st_mode & stat.S_IROTH:
-			problems.append("not readable for user but readable for other")
-			suggestion = suggestion & ~stat.S_IROTH
-		return problems, suggestion
-
-	def check_write_permissions(self, st_mode):
-		problems = []
-		suggestion = st_mode
-		if st_mode & stat.S_IWGRP:
-			problems.append("writable for groups")
-			suggestion = suggestion & ~stat.S_IWGRP
-		if st_mode & stat.S_IWOTH:
-			problems.append("writable for other")
-			suggestion = suggestion & ~stat.S_IWOTH
-		return problems, suggestion
-
-	def check_file_execute_permissions(self, st_mode):
-		problems = []
-		suggestion = st_mode
-		if st_mode & stat.S_IXGRP:
-			problems.append("executable for group")
-			suggestion = suggestion & ~stat.S_IXGRP
-		if st_mode & stat.S_IXOTH:
-			problems.append("executable for other")
-			suggestion = suggestion & ~stat.S_IXOTH
-		return problems, suggestion
-
-	def check_dir_execute_permissions(self, st_mode):
-		problems = []
-		suggestion = st_mode
-		if not st_mode & stat.S_IXUSR and st_mode & stat.S_IXGRP:
-			problems.append("not executable for user but executable for group")
-			suggestion = suggestion & ~stat.S_IXGRP
-		if not st_mode & stat.S_IXUSR and st_mode & stat.S_IXOTH:
-			problems.append("not executable for user but executable for other")
-			suggestion = suggestion & ~stat.S_IXOTH
-		return problems, suggestion
-
+				orig_perm = Permissions(os.stat(d).st_mode)
+				sugg_perm = Permissions(os.stat(d).st_mode)
+				sugg_perm.fix(dir_mode=True)
+				if orig_perm != sugg_perm:
+					print '-' + str(orig_perm), '->', '-' + str(sugg_perm), d
 
 
 
