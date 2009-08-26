@@ -55,7 +55,7 @@ class PathPermissions(object):
 		'''
 		self.path = path
 		st_mode = os.stat(path).st_mode
-		self.is_dir = stat.S_ISDIR(st_mode)
+		self.is_dir = bool(stat.S_ISDIR(st_mode))
 		self.user = PersonaPermission(r=st_mode & stat.S_IRUSR, w=st_mode & stat.S_IWUSR, x=st_mode & stat.S_IXUSR)
 		self.group = PersonaPermission(r=st_mode & stat.S_IRGRP, w=st_mode & stat.S_IWGRP, x=st_mode & stat.S_IXGRP)
 		self.other = PersonaPermission(r=st_mode & stat.S_IROTH, w=st_mode & stat.S_IWOTH, x=st_mode & stat.S_IXOTH)
@@ -103,18 +103,34 @@ class PathPermissions(object):
 		return p
 
 
-class PermissionChecker(object):
-	def __init__(self):
-		pass
+def check_permissions(top, fix=False):
+	for root, dirs, files in os.walk(top):
+		for item in files + dirs:
+			path = os.path.join(root, item)
+			orig_perm = PathPermissions(path)
+			sugg_perm = orig_perm.get_fixed_permission()
+			if orig_perm != sugg_perm:
+				if fix:
+					print str(orig_perm), 'fixed to', str(sugg_perm), path
+					os.chmod(path, sugg_perm.get_st_mode())
+				else :
+					print str(orig_perm), 'suggested:', str(sugg_perm), path
 
-	def check(self, top):
-		for root, dirs, files in os.walk(top):
-			for item in files + dirs:
-				path = os.path.join(root, item)
-				orig_perm = PathPermissions(path)
-				sugg_perm = orig_perm.get_fixed_permission()
-				if orig_perm != sugg_perm:
-					print str(orig_perm), '->', str(sugg_perm), path
 
 if __name__ == '__main__':
-	PermissionChecker().check('.')
+	from optparse import OptionParser
+	parser = OptionParser()
+	parser.add_option("-f", "--fix",
+		action="store_true", dest="fix", default=False,
+		help="Also fix the found permission problems")
+
+	(options, args) = parser.parse_args()
+
+	# Get the tops of the trees to check.
+	if len(args) == 0:
+		tops = ['.']
+	else:
+		tops = args
+
+	for top in tops:
+		check_permissions(top, fix=options.fix)
