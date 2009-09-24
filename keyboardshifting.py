@@ -1,6 +1,8 @@
 #!/usr/bin/env python
+import re
 
 import sys
+import optparse
 
 
 class OutOfKeyboardError(Exception):
@@ -16,6 +18,11 @@ class Keyboard(object):
             'qwertyuiop',
             'asdfghjkl',
             'zxcvbnm',
+        ],
+        'azerty': [
+            'azertyuiop',
+            'qsdfghjklm',
+            'wxcvbn',
         ]
     }
 
@@ -28,8 +35,8 @@ class Keyboard(object):
         self._pos2char = {}
         for r, row in enumerate(self._layouts[layout]):
             for c, char in enumerate(row):
-                self._char2pos[char] = (r,c)
-                self._pos2char[(r,c)] = char
+                self._char2pos[char] = (r, c)
+                self._pos2char[(r, c)] = char
 
     def translate(self, word, shift):
         '''
@@ -47,14 +54,14 @@ class Keyboard(object):
             return result
         except KeyError:
             raise OutOfKeyboardError
-        
-    def search_shift_couples(self, words, shifts=[(0,-2), (0,-1), (0,1), (0,2)], verbosity=True):
+
+    def search_shift_couples(self, words, shifts=[(0, 1), (0, 2)], verbosity=True):
         '''
         Search for word couples that can be translated into each other
         with a simple shift.
         '''
         hits = []
-    
+
         for word in words:
             if verbosity == True:
                 print word, '\r',
@@ -77,25 +84,50 @@ def get_words(dictionary_file, word_length=4):
     '''
     words = []
     f = open(dictionary_file, 'r')
+    rep = re.compile('^[a-z]+$')
     for line in f:
-        if len(line) == word_length + 1:
-            words.append(line.strip().lower())
+        word = line.strip().lower()
+        if len(word) == word_length and rep.match(word):
+            words.append(word)
     f.close()
     return words
 
 
-            
+
 
 if __name__ == '__main__':
 
-    try:
-        word_length = int(sys.argv[1])
-    except:
-        word_length = 5
+    # Build command line option parser.
+    optparser = optparse.OptionParser(
+        usage="usage: %prog [options]",
+        description='Search for keyboard hand shift word couples.'
+    )
+    optparser.add_option(
+        '-w', '--word-length',
+        metavar='W',
+        dest="word_length", type='int', default=5,
+        help="The word length to use."
+    )
+    optparser.add_option(
+        '-d', '--dictionary',
+        metavar='DICTIONARY',
+        dest="dictionary_file", default='/usr/share/dict/words',
+        help="The dictionary to read words from."
+    )
+    optparser.add_option(
+        '-k', '--layout',
+        metavar='LAYOUT',
+        dest="keyboard_layout", default='querty',
+        help="The keyboard layout to use."
+    )
+    # Get options.
+    (options, arguments) = optparser.parse_args()
 
-    words = get_words('/usr/share/dict/words', word_length)
-    keyboard = Keyboard(layout='querty')
-    shifts=[(0,-2), (0,-1), (0,1), (0,2)]
-    
+    assert len(arguments) == 0
+
+    words = get_words(options.dictionary_file, options.word_length)
+    keyboard = Keyboard(layout=options.keyboard_layout)
+    shifts = [(0, 1), (0, 2), (0, 3)]
+
     keyboard.search_shift_couples(words, shifts=shifts, verbosity=True)
 
