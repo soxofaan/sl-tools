@@ -118,7 +118,7 @@ if __name__ == '__main__':
         '-k', '--layout',
         metavar='LAYOUT',
         dest="keyboard_layout", default='querty',
-        help="The keyboard layout to use."
+        help="The keyboard layout to use (options: %s)." % (', '.join(Keyboard._layouts.keys()))
     )
     # Get options.
     (options, arguments) = optparser.parse_args()
@@ -127,7 +127,7 @@ if __name__ == '__main__':
 
     words = get_words(options.dictionary_file, options.word_length)
     keyboard = Keyboard(layout=options.keyboard_layout)
-    shifts = [(0, 1), (0, 2), (0, 3)]
+    shifts = [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
 
     keyboard.search_shift_couples(words, shifts=shifts, verbosity=True)
 
