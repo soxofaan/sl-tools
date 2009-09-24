@@ -2,21 +2,24 @@
 
 import sys
 
-qwerty_layout = [
-    'qwertyuiop',
-    'asdfghjkl',
-    'zxcvbnm',
-    ]
 
 class OutOfKeyboardError(Exception):
     pass
 
 class Keyboard(object):
-    def __init__(self, layout=qwerty_layout):
+    _layouts = {
+        'querty': [
+            'qwertyuiop',
+            'asdfghjkl',
+            'zxcvbnm',
+        ]
+    }
+
+    def __init__(self, layout='querty'):
         # Dicts for character to position mappings
         self._char2pos = {}
         self._pos2char = {}
-        for r, row in enumerate(layout):
+        for r, row in enumerate(self._layouts[layout]):
             for c, char in enumerate(row):
                 self._char2pos[char] = (r,c)
                 self._pos2char[(r,c)] = char
