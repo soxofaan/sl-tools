@@ -7,6 +7,10 @@ class OutOfKeyboardError(Exception):
     pass
 
 class Keyboard(object):
+    '''
+    Object that manages a mapping between characters and postions
+    and provides a hand shift translation method for words.
+    '''
     _layouts = {
         'querty': [
             'qwertyuiop',
@@ -16,6 +20,9 @@ class Keyboard(object):
     }
 
     def __init__(self, layout='querty'):
+        '''
+        Initialize a Keyboard object with the given layout.
+        '''
         # Dicts for character to position mappings
         self._char2pos = {}
         self._pos2char = {}
@@ -24,10 +31,14 @@ class Keyboard(object):
                 self._char2pos[char] = (r,c)
                 self._pos2char[(r,c)] = char
 
-        print self._char2pos
-        print self._pos2char
-
     def translate(self, word, shift):
+        '''
+        Translate a word by the given hand shift.
+        
+        @param word: the word to translate
+        @param shift: a tuple (x, y) with x the horizontal shift and y the 
+            vertical shift
+        '''
         result = ''
         try:
             for char in word:
@@ -36,45 +47,55 @@ class Keyboard(object):
             return result
         except KeyError:
             raise OutOfKeyboardError
+        
+    def search_shift_couples(self, words, shifts=[(0,-2), (0,-1), (0,1), (0,2)], verbosity=True):
+        '''
+        Search for word couples that can be translated into each other
+        with a simple shift.
+        '''
+        hits = []
+    
+        for word in words:
+            if verbosity == True:
+                print word, '\r',
+            for shift in shifts:
+                try:
+                    result = self.translate(word, shift)
+                except OutOfKeyboardError:
+                    continue
+                if result in words:
+                    hits.append((word, shift, result))
+                    if verbosity:
+                        print word, shift, result
+        return hits
 
 
-def get_words(word_length=4):
+
+def get_words(dictionary_file, word_length=4):
+    '''
+    Get words of a given length from a dictionary file.
+    '''
     words = []
-    dict = open('/usr/share/dict/words', 'r')
-    for line in dict:
+    f = open(dictionary_file, 'r')
+    for line in f:
         if len(line) == word_length + 1:
             words.append(line.strip().lower())
-    dict.close()
+    f.close()
     return words
 
 
+            
+
 if __name__ == '__main__':
-
-    k = Keyboard()
-
-    #print 'set ->', k.translate('set', (0,1))
-    #print 'set ->', k.translate('set', (-1,-1))
 
     try:
         word_length = int(sys.argv[1])
     except:
         word_length = 5
 
-    words = get_words(word_length)
-    # print words
-
-    hits = []
-
-    #shifts = [ (1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1), (0,-1), (1,-1)]
-    shifts = [ (0,-3), (0,-2), (0,-1), (0,1), (0,2), (0,3)]
-    for word in words:
-        print word, '\r',
-        for shift in shifts:
-            try:
-                result = k.translate(word, shift)
-            except OutOfKeyboardError:
-                continue
-            if result in words:
-                hits.append((word, shift, result))
-                print word, shift, result
+    words = get_words('/usr/share/dict/words', word_length)
+    keyboard = Keyboard(layout='querty')
+    shifts=[(0,-2), (0,-1), (0,1), (0,2)]
+    
+    keyboard.search_shift_couples(words, shifts=shifts, verbosity=True)
 
