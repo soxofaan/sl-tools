@@ -103,7 +103,7 @@ class PathPermissions(object):
 		return p
 
 
-def check_permissions(top, fix=False):
+def check_permissions(top, fix=False, generate_chmods=False):
 	for root, dirs, files in os.walk(top):
 		for item in files + dirs:
 			path = os.path.join(root, item)
@@ -117,8 +117,11 @@ def check_permissions(top, fix=False):
 					except OSError:
 						print 'failed to fix', str(orig_perm), 'to', str(sugg_perm), path
 
-				else :
-					print str(orig_perm), '(suggested: ' + str(sugg_perm) +')', path
+				else:
+					if generate_chmods:
+						print 'chmod', oct(sugg_perm.get_st_mode()), path
+					else:
+						print str(orig_perm), '(suggested: ' + str(sugg_perm) +')', path
 
 
 if __name__ == '__main__':
@@ -127,6 +130,9 @@ if __name__ == '__main__':
 	parser.add_option("-f", "--fix",
 		action="store_true", dest="fix", default=False,
 		help="Also fix the found permission problems")
+	parser.add_option("-c", "--chmod",
+		action="store_true", dest="generate_chmods", default=False,
+		help="Generate chmod commands to fix the permission issues")
 
 	(options, args) = parser.parse_args()
 
@@ -137,4 +143,4 @@ if __name__ == '__main__':
 		tops = args
 
 	for top in tops:
-		check_permissions(top, fix=options.fix)
+		check_permissions(top, fix=options.fix, generate_chmods=options.generate_chmods)
