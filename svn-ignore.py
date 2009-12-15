@@ -45,11 +45,11 @@ def main():
 
     for path in sys.argv[1:]:
         print path
-        
+
         dirpath, filename = os.path.split(path)
         svnignore_data = svn_propget_svnignore(dirpath)
 
-        if filename not in svnignore_data:
+        if filename not in svnignore_data.split('\n'):
             svnignore_data += '\n' + filename
             svn_propset_svnignore(dirpath, svnignore_data)
 
