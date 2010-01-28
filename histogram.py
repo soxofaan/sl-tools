@@ -103,7 +103,7 @@ if __name__ == '__main__':
     )
     optparser.add_option(
         '-n', '--limit', metavar='N',
-        dest='limit', type='int', action='store', default=20,
+        dest='limit', type='int', action='store', default=None,
         help='Limit the histogram to a number of entries.',
     )
 
