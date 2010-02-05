@@ -5,7 +5,7 @@
 based on pdfjam (http://go.warwick.ac.uk/pdfjam)
 '''
 
-__version__ = '0.1'
+__version__ = '0.2'
 
 import optparse
 import os
@@ -18,7 +18,8 @@ def check_requisites():
     '''
     Helper function for checking the requisites and dependencies for pdfnup
     '''
-    #@TODO: check requisites and use this function
+    # @TODO: check if pdflatex is available
+    # @TODO: check other requisites and use this function
 #    pdflatex="/usr/bin/pdflatex"
 #    PATH=`dirname "$pdflatex"`:$PATH
 #    export PATH
@@ -36,10 +37,10 @@ def check_requisites():
 #            exit 1;;
 #    esac
 
-
-def main():
-
-    # Build the command line interface
+def build_option_parser():
+    '''
+    Build the command line interface.
+    '''
     cliparser = optparse.OptionParser(
         '''usage: %prog [options] file.pdf [another.pdf ...]
         Rearrange/stack pages of a PDF file.
@@ -49,21 +50,19 @@ def main():
     # Specify the output file.
     cliparser.add_option(
         '-o', '--output',
-        default=None,
-        action='store', dest='output_file',
+        action='store', dest='output_file', default=None,
+
         help='The output file name.',
     )
     # Main options.
     cliparser.add_option(
-        '--nup', metavar='MxN',
-        default='2x1',
-        action='store', dest='nup',
+        '-n', '--nup', metavar='MxN',
+        action='store', dest='nup', default='2x1',
         help='Specification of how to stack the pages. E.g. "--nup" 2x1 for two pages side by side, "--num 1x2" for two pages stacked vertically, etc',
     )
     cliparser.add_option(
-        '--pages',
-        default='all',
-        action='store', dest='pages', metavar='RANGE',
+        '-p', '--pages', metavar='RANGE',
+        action='store', dest='pages', default='all',
         help='The range of pages to be included. E.g. "--pages 3-6", "--pages 2,8,4,5" or "--pages all".',
     )
     # Layout options
@@ -118,7 +117,7 @@ def main():
         help='Specify the scaling factor for the logical pages. E.g. --scale 0.91.',
     )
     cliparser.add_option(
-        '--column',
+        '-c', '--column',
         default=False,
         action='store_true', dest='column',
         help='Put successive logical pages along columns (instead of along rows).',
@@ -130,7 +129,7 @@ def main():
         help='Put an empty page before first page, so that first page is at right hand side.',
     )
 
-
+    # Various options
     cliparser.add_option(
         '--tidy',
         action='store_true', dest='tidy', default=True,
@@ -142,11 +141,17 @@ def main():
         help='Do not clean up the temporary files.',
     )
 
+    return cliparser
+
+
+def main():
+
+    cliparser = build_option_parser()
+
     # Parse the command line.
     (clioptions, cliargs) = cliparser.parse_args()
 
     # Check options and arguments
-
     if len(cliargs) == 0:
         raise ValueError('At least one input file should be given')
     if len(cliargs) > 1 and clioptions.output_file != None:
@@ -156,9 +161,9 @@ def main():
     clioptions.fitpaper = 'false'
     if clioptions.orientation == 'auto':
         x, y = parse_nup(clioptions.nup)
-        if x < y:
+        if x > y:
             clioptions.orientation = 'landscape'
-        elif x > y:
+        elif x < y:
             clioptions.orientation = 'portrait'
         else:
             clioptions.fitpaper = 'true'
@@ -197,7 +202,6 @@ def main():
         else:
             print 'Failed: output file was not written'
 
-
         # clean up
         if clioptions.tidy:
             shutil.rmtree(work_dir)
@@ -211,17 +215,19 @@ def parse_nup(nup):
     return x, y
 
 
-def generate_tex(clioptions):
+def generate_tex(clioptions, input_pdf_file='input.pdf'):
     '''
     Generate the LaTeX code for PdfNuppy
     '''
+    # Dictionary of options for the includepdf command
     option_dict = {}
+    # Handle the 'all pages' option
     if clioptions.pages == 'all':
         option_dict['pages'] = '-'
     else:
         option_dict['pages'] = clioptions.pages
     # String clioptions just to copy over (when not None).
-    for field in ['nup', 'frame', 'trim', 'delta', 'offset', 'scale']:
+    for field in ['nup', 'orientation', 'frame', 'trim', 'delta', 'offset', 'scale']:
         value = clioptions.__dict__[field]
         if value != None:
             option_dict[field] = value
@@ -234,9 +240,14 @@ def generate_tex(clioptions):
     return  r'''\documentclass[%(papersize)s,%(orientation)s]{article}
         \usepackage{pdfpages}
         \begin{document}
-        \includepdf[%(options)s]{input.pdf}
+        \includepdf[%(options)s]{%(input_pdf_file)s}
         \end{document}
-    ''' % {'papersize': clioptions.papersize, 'orientation': clioptions.orientation, 'options': options}
+    ''' % {
+            'papersize': clioptions.papersize,
+            'orientation': clioptions.orientation,
+            'options': options,
+            'input_pdf_file': input_pdf_file,
+        }
 
 
 
