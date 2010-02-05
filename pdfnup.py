@@ -65,6 +65,11 @@ def build_option_parser():
         action='store', dest='pages', default='all',
         help='The range of pages to be included. E.g. "--pages 3-6", "--pages 2,8,4,5" or "--pages all".',
     )
+    cliparser.add_option(
+        '-b', '--booklet',
+        action='store_true', dest='booklet', default=False,
+        help='Rearrange the pages to make a booklet.',
+    )
     # Layout options
     cliparser.add_option(
         '--papersize',
@@ -189,6 +194,7 @@ def main():
             f.write(generate_tex(clioptions))
 
         # Call pdflatex (run it in the working directory).
+        # TODO: suppress output
         p = subprocess.Popen(
             ['pdflatex', '--interaction', 'batchmode', tex_file_name],
             cwd=work_dir,
@@ -232,7 +238,7 @@ def generate_tex(clioptions, input_pdf_file='input.pdf'):
         if value != None:
             option_dict[field] = value
     # Boolean clioptions to copy over.
-    for field in ['frame', 'fitpaper', 'noautoscale', 'column', 'openright']:
+    for field in ['booklet', 'frame', 'fitpaper', 'noautoscale', 'column', 'openright']:
         option_dict[field] = str(clioptions.__dict__[field]).lower()
 
     options = ','.join('%s=%s' % kv for kv in option_dict.items())
