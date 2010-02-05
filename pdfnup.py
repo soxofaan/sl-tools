@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+'''
 
+based on pdfjam (http://go.warwick.ac.uk/pdfjam)
+'''
 
 __version__ = '0.1'
 
@@ -15,7 +18,7 @@ def check_requisites():
     '''
     Helper function for checking the requisites and dependencies for pdfnup
     '''
-    #@TODO: check requisites
+    #@TODO: check requisites and use this function
 #    pdflatex="/usr/bin/pdflatex"
 #    PATH=`dirname "$pdflatex"`:$PATH
 #    export PATH
@@ -43,8 +46,16 @@ def main():
         ''',
         version='%%prog %s' % __version__,
     )
+    # Specify the output file.
     cliparser.add_option(
-        '-n', '--nup', metavar='MxN',
+        '-o', '--output',
+        default=None,
+        action='store', dest='output_file',
+        help='The output file name.',
+    )
+    # Main options.
+    cliparser.add_option(
+        '--nup', metavar='MxN',
         default='2x1',
         action='store', dest='nup',
         help='Specification of how to stack the pages. E.g. "--nup" 2x1 for two pages side by side, "--num 1x2" for two pages stacked vertically, etc',
@@ -55,6 +66,7 @@ def main():
         action='store', dest='pages', metavar='RANGE',
         help='The range of pages to be included. E.g. "--pages 3-6", "--pages 2,8,4,5" or "--pages all".',
     )
+    # Layout options
     cliparser.add_option(
         '--papersize',
         default='a4paper',
@@ -62,17 +74,12 @@ def main():
         help='The output paper size (LaTeX specification). E.g. a4paper or letterpaper',
     )
     cliparser.add_option(
-        '--orient',
+        '--orientation',
         default='auto',
         action='store', dest='orientation',
         help='The output page orientation: landscape, portrait or auto.',
     )
-    cliparser.add_option(
-        '-o', '--output',
-        default=None,
-        action='store', dest='output_file',
-        help='The output file name.',
-    )
+
     cliparser.add_option(
         '-f', '--frame',
         default=False,
@@ -122,6 +129,7 @@ def main():
         action='store_true', dest='openright',
         help='Put an empty page before first page, so that first page is at right hand side.',
     )
+
 
     cliparser.add_option(
         '--tidy',
