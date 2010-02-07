@@ -7,39 +7,49 @@ based on pdfjam (http://go.warwick.ac.uk/pdfjam)
 
 __version__ = '0.2'
 
-import optparse
 import os
+import sys
+import optparse
 import tempfile
 import subprocess
 import shutil
 import re
 
-def check_requisites():
+class RequirementException(Exception): pass
+
+
+def check_requirements(pdflatex_bin='pdflatex'):
     '''
-    Helper function for checking the requisites and dependencies for pdfnup
+    Helper function for checking the requisites and dependencies for pdfnup.
+    
+    @param pdflatex_bin: path to the pdflatex binary. If not given, the
+        relative 'pdflatex' is used as default, which implies that $PATH 
+        is used for the lookup.
     '''
-    # @TODO: check if pdflatex is available
-    # @TODO: check other requisites and use this function
-#    pdflatex="/usr/bin/pdflatex"
-#    PATH=`dirname "$pdflatex"`:$PATH
-#    export PATH
-#    case `kpsewhich pdfpages.sty` in
-#        "") echo "pdfnup: pdfpages.sty not installed"; exit 1;;
-#    esac
-#    case `kpsewhich eso-pic.sty` in
-#        "") echo \
-#            "pdfnup: eso-pic.sty not installed (see the pdfpages manual)"
-#            exit 1;;
-#    esac
-#    case `kpsewhich everyshi.sty` in
-#        "") echo \
-#            "pdfnup: everyshi.sty not installed (see the pdfpages manual)"
-#            exit 1;;
-#    esac
+    def call(*args):
+        '''Helper function for calling a command.'''
+        return subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    # Check existence of pdflatex.
+    try:
+        stdout, stderr = call(pdflatex_bin, '--version')
+    except OSError:
+        raise RequirementException('Could not find pdflatex executable.')
+    # Check existence of kpsewhich.
+    try:
+        stdout, stderr = call('kpsewhich', '-version')
+    except OSError:
+        raise RequirementException('Could not find kpsewhich.')
+    # Check for required LaTeX packages
+    for file in ['pdfpages.sty', 'eso-pic.sty', 'everyshi.sty']:
+        stdout, stderr = call('kpsewhich', file)
+        if stdout == '':
+            raise RequirementException('Could not find LaTeX package "%s"' % file)
+
 
 def build_option_parser():
     '''
     Build the command line interface.
+    
     '''
     cliparser = optparse.OptionParser(
         '''usage: %prog [options] file.pdf [another.pdf ...]
@@ -54,6 +64,8 @@ def build_option_parser():
 
         help='The output file name.',
     )
+
+    # @todo: put options in categories?
     # Main options.
     cliparser.add_option(
         '-n', '--nup', metavar='MxN',
@@ -145,6 +157,11 @@ def build_option_parser():
         action='store_false', dest='tidy', default=True,
         help='Do not clean up the temporary files.',
     )
+    cliparser.add_option(
+        '--pdflatex', metavar='PDFLATEX',
+        action='store', dest='pdflatex_bin', default='pdflatex',
+        help='The pdflatex executable to use. By default the relative "pdflatex" (which will be looked up in $PATH), but it can also be set to an explicit absolute path.',
+    )
 
     return cliparser
 
@@ -156,6 +173,9 @@ def main():
     # Parse the command line.
     (clioptions, cliargs) = cliparser.parse_args()
 
+    # Check pdflatex
+    check_requirements(clioptions.pdflatex_bin)
+    
     # Check options and arguments
     if len(cliargs) == 0:
         raise ValueError('At least one input file should be given')
@@ -175,6 +195,8 @@ def main():
 
 
     for input_file in cliargs:
+        
+        # TODO: refactor this for loop body?
         print 'Processing', input_file
 
         output_file = clioptions.output_file
@@ -259,4 +281,7 @@ def generate_tex(clioptions, input_pdf_file='input.pdf'):
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception, e:
+        print >>sys.stderr, 'Error:', e
