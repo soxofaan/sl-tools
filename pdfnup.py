@@ -214,11 +214,12 @@ def main():
         tex_file_name = os.path.join(work_dir, 'pdfnuppy.tex')
         with file(tex_file_name, 'w') as f:
             f.write(generate_tex(clioptions))
+            # @todo: option to show tex code
 
         # Call pdflatex (run it in the working directory).
-        # TODO: suppress output
         p = subprocess.Popen(
             ['pdflatex', '--interaction', 'batchmode', tex_file_name],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             cwd=work_dir,
             )
         p.communicate()
@@ -255,7 +256,7 @@ def generate_tex(clioptions, input_pdf_file='input.pdf'):
     else:
         option_dict['pages'] = clioptions.pages
     # String clioptions just to copy over (when not None).
-    for field in ['nup', 'orientation', 'frame', 'trim', 'delta', 'offset', 'scale']:
+    for field in ['nup', 'frame', 'trim', 'delta', 'offset', 'scale']:
         value = clioptions.__dict__[field]
         if value != None:
             option_dict[field] = value
