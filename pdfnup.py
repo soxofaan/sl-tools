@@ -245,7 +245,7 @@ def pdfnup(input_file, clioptions):
         if clioptions.verbose:
             print latex_code
     # Call pdflatex (run it in the working directory).
-    p = subprocess.Popen(['pdflatex', '--interaction', 'batchmode', tex_file_name],
+    p = subprocess.Popen([clioptions.pdflatex_bin, '--interaction', 'batchmode', tex_file_name],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         cwd=work_dir)
     p.communicate()
