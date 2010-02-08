@@ -268,7 +268,7 @@ def pdfnup(input_file, clioptions):
 
 def generate_tex(clioptions, input_pdf_file='input.pdf'):
     '''
-    Generate the LaTeX code for PdfNuppy
+    Generate the LaTeX code using pdfpages and includepdf.
     '''
     # Dictionary of options for the includepdf command
     option_dict = {}
@@ -309,3 +309,5 @@ if __name__ == '__main__':
         main()
     except Exception, e:
         print >> sys.stderr, 'Error:', e
+
+
