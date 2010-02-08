@@ -231,7 +231,9 @@ def pdfnup(input_file, clioptions):
     output_file = clioptions.output_file
     if output_file == None:
         output_file = '%s-%s.pdf' % (os.path.splitext(input_file)[0], clioptions.nup)
+    # @todo: Use exceptions instead of assertions to make it better human undestandable.
     assert output_file != input_file
+    assert not os.path.isdir(output_file)
     # Create a temp directory for doing the work.
     work_dir = tempfile.mkdtemp(prefix='pdfnuppy')
     print 'Working in', work_dir
