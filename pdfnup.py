@@ -188,7 +188,7 @@ def main():
         raise ValueError('--outfile cannot be used with multiple input files')
 
     # Set the fitpaper setting and handle the orient setting
-    clioptions.fitpaper = 'false'
+    clioptions.fitpaper = False
     if clioptions.orientation == 'auto':
         x, y = parse_nup(clioptions.nup)
         if x > y:
@@ -196,7 +196,7 @@ def main():
         elif x < y:
             clioptions.orientation = 'portrait'
         else:
-            clioptions.fitpaper = 'true'
+            clioptions.fitpaper = True
 
 
     for input_file in cliargs:
@@ -263,15 +263,12 @@ def generate_tex(clioptions, input_pdf_file='input.pdf'):
     else:
         option_dict['pages'] = clioptions.pages
     # String clioptions just to copy over (when not None).
-    for field in ['nup', 'frame', 'trim', 'delta', 'offset', 'scale']:
+    for field in ['nup', 'trim', 'delta', 'offset', 'scale']:
         value = clioptions.__dict__[field]
         if value != None:
             option_dict[field] = value
-    # Boolean clioptions to copy over.
-    for field in ['frame', 'fitpaper', 'noautoscale', 'column', 'openright']:
-        option_dict[field] = str(clioptions.__dict__[field]).lower()
-    # Some fields to only add when enabled
-    for field in ['booklet']:
+    # Some boolean fields to only add when enabled
+    for field in ['fitpaper', 'column', 'booklet', 'frame', 'noautoscale', 'openright']:
         if clioptions.__dict__[field]:
             option_dict[field] = str(clioptions.__dict__[field]).lower()
 
