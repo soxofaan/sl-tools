@@ -162,6 +162,11 @@ def build_option_parser():
         action='store', dest='pdflatex_bin', default='pdflatex',
         help='The pdflatex executable to use. By default the relative "pdflatex" (which will be looked up in $PATH), but it can also be set to an explicit absolute path.',
     )
+    cliparser.add_option(
+        '--verbose',
+        action='store_true', dest='verbose', default=False,
+        help='Verbose mode: show the used LaTeX code.',
+    )
 
     return cliparser
 
@@ -213,8 +218,10 @@ def main():
         # Generate the LaTeX file.
         tex_file_name = os.path.join(work_dir, 'pdfnuppy.tex')
         with file(tex_file_name, 'w') as f:
-            f.write(generate_tex(clioptions))
-            # @todo: option to show tex code
+            latex_code = generate_tex(clioptions)
+            f.write(latex_code)
+            if clioptions.verbose:
+                print latex_code
 
         # Call pdflatex (run it in the working directory).
         p = subprocess.Popen(
