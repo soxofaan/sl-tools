@@ -27,7 +27,7 @@ def main():
 
     # Check pdflatex
     check_requirements(clioptions.pdflatex_bin)
-    
+
     # Check options and arguments
     if len(cliargs) == 0:
         raise ValueError('At least one input file should be given')
@@ -47,7 +47,7 @@ def main():
 
 
     for input_file in cliargs:
-        
+
         # TODO: refactor this for loop body?
         print 'Processing', input_file
 
@@ -137,12 +137,11 @@ def build_option_parser():
         help='The output file name.',
     )
 
-    # @todo: put options in categories?
     # Main options.
     cliparser.add_option(
         '-n', '--nup', metavar='MxN',
         action='store', dest='nup', default='2x1',
-        help='Specification of how to stack the pages. E.g. "--nup" 2x1 for two pages side by side, "--num 1x2" for two pages stacked vertically, etc',
+        help='Specification of how to stack the pages. E.g. "--nup" 2x1 for two pages side by side, "--num 1x2" for two pages stacked vertically, etc.',
     )
     cliparser.add_option(
         '-p', '--pages', metavar='RANGE',
@@ -154,87 +153,95 @@ def build_option_parser():
         action='store_true', dest='booklet', default=False,
         help='Rearrange the pages to make a booklet.',
     )
-    # Layout options
-    cliparser.add_option(
+    
+    # Paper options.
+    paper_options = optparse.OptionGroup(cliparser, 'Paper options')
+    cliparser.add_option_group(paper_options)
+    paper_options.add_option(
         '--papersize',
         default='a4paper',
         action='store', dest='papersize',
-        help='The output paper size (LaTeX specification). E.g. a4paper or letterpaper',
+        help='The output paper size (LaTeX specification). E.g. a4paper or letterpaper.',
     )
-    cliparser.add_option(
+    paper_options.add_option(
         '--orientation',
         default='auto',
         action='store', dest='orientation',
         help='The output page orientation: landscape, portrait or auto.',
     )
 
-    cliparser.add_option(
+    # Layout options
+    layout_options = optparse.OptionGroup(cliparser, 'Layout options')
+    cliparser.add_option_group(layout_options)
+    layout_options.add_option(
         '-f', '--frame',
         default=False,
         action='store_true', dest='frame',
         help='Set a thin frame around the stacked pages.',
     )
-    cliparser.add_option(
+    layout_options.add_option(
         '--trim',
         default=None,
         action='store', dest='trim',
         help='A page trimming specification. E.g --trim "1cm 1cm 1cm 1cm".  Note that trimming does not mix well with --frame.',
     )
-
-    cliparser.add_option(
+    layout_options.add_option(
         '--offset',
         default=None,
         action='store', dest='offset',
         help='An page offset specification to set the position of output pages. E.g --offset "1cm 0.5cm".',
     )
-    cliparser.add_option(
+    layout_options.add_option(
         '--delta',
         default=None,
         action='store', dest='delta',
         help='Put space between logical pages. E.g. --delta "1cm 1cm"',
     )
-    cliparser.add_option(
+    layout_options.add_option(
         '--noautoscale',
         default=False,
         action='store_true', dest='noautoscale',
         help='Disable the automatic scaling of the logical pages. Use --scale to set the scaling factor explicitly.',
     )
-    cliparser.add_option(
+    layout_options.add_option(
         '--scale',
         default=None,
         action='store', dest='scale',
         help='Specify the scaling factor for the logical pages. E.g. --scale 0.91.',
     )
-    cliparser.add_option(
+    layout_options.add_option(
         '-c', '--column',
         default=False,
         action='store_true', dest='column',
         help='Put successive logical pages along columns (instead of along rows).',
     )
-    cliparser.add_option(
+    layout_options.add_option(
         '--openright',
         default=False,
         action='store_true', dest='openright',
         help='Put an empty page before first page, so that first page is at right hand side.',
     )
 
+
     # Various options
-    cliparser.add_option(
+    misc_options = optparse.OptionGroup(cliparser, "Miscellaneous Options")
+    cliparser.add_option_group(misc_options)
+    misc_options.add_option(
         '--tidy',
         action='store_true', dest='tidy', default=True,
-        help='Clean up the temporary files when ready.',
+        help='Clean up the temporary files when ready (the default).',
     )
-    cliparser.add_option(
+    misc_options.add_option(
         '--untidy',
         action='store_false', dest='tidy', default=True,
         help='Do not clean up the temporary files.',
     )
-    cliparser.add_option(
+    misc_options.add_option(
         '--pdflatex', metavar='PDFLATEX',
         action='store', dest='pdflatex_bin', default='pdflatex',
         help='The pdflatex executable to use. By default the relative "pdflatex" (which will be looked up in $PATH), but it can also be set to an explicit absolute path.',
     )
-    cliparser.add_option(
+    misc_options.add_option(
         '--verbose',
         action='store_true', dest='verbose', default=False,
         help='Verbose mode: show the used LaTeX code.',
@@ -296,4 +303,4 @@ if __name__ == '__main__':
     try:
         main()
     except Exception, e:
-        print >>sys.stderr, 'Error:', e
+        print >> sys.stderr, 'Error:', e
