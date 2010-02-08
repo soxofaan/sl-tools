@@ -261,9 +261,14 @@ def generate_tex(clioptions, input_pdf_file='input.pdf'):
         if value != None:
             option_dict[field] = value
     # Boolean clioptions to copy over.
-    for field in ['booklet', 'frame', 'fitpaper', 'noautoscale', 'column', 'openright']:
+    for field in ['frame', 'fitpaper', 'noautoscale', 'column', 'openright']:
         option_dict[field] = str(clioptions.__dict__[field]).lower()
+    # Some fields to only add when enabled
+    for field in ['booklet']:
+        if clioptions.__dict__[field]:
+            option_dict[field] = str(clioptions.__dict__[field]).lower()
 
+    # Construct the options list
     options = ','.join('%s=%s' % kv for kv in option_dict.items())
 
     return  r'''\documentclass[%(papersize)s,%(orientation)s]{article}
