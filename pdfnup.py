@@ -249,13 +249,16 @@ def pdfnup(input_file, clioptions):
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         cwd=work_dir)
     p.communicate()
-    # Check if the PDF was generated and copy it over to the output file
+    # Check if the PDF was successfully generated.
+    if p.returncode != 0:
+        raise RuntimeError('pdflatex returned with error code %d.' % p.returncode)
     generated_pdf = os.path.join(work_dir, 'pdfnuppy.pdf')
-    if os.path.isfile(generated_pdf):
-        shutil.copyfile(generated_pdf, output_file)
-        print 'Finished: output is', output_file
-    else:
-        print 'Failed: output file was not written'
+    if not os.path.isfile(generated_pdf):
+        raise Exception('Output file was not written')
+    # Copy the generated PDF file to the desired output file
+    shutil.copyfile(generated_pdf, output_file)
+    print 'Finished: output is', output_file
+
     # Clean up.
     if clioptions.tidy:
         shutil.rmtree(work_dir)
