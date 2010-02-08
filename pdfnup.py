@@ -18,6 +18,7 @@ import re
 class RequirementException(Exception): pass
 
 
+
 def main():
 
     cliparser = build_option_parser()
@@ -25,7 +26,7 @@ def main():
     # Parse the command line.
     (clioptions, cliargs) = cliparser.parse_args()
 
-    # Check pdflatex
+    # Check the pdflatex requirements
     check_requirements(clioptions.pdflatex_bin)
 
     # Check options and arguments
@@ -45,49 +46,9 @@ def main():
         else:
             clioptions.fitpaper = True
 
-
     for input_file in cliargs:
-
-        # TODO: refactor this for loop body?
         print 'Processing', input_file
-
-        output_file = clioptions.output_file
-        if output_file == None:
-            output_file = '%s-%s.pdf' % (os.path.splitext(input_file)[0], clioptions.nup)
-        assert output_file != input_file
-
-
-        # Create a temp directory for doing our work
-        work_dir = tempfile.mkdtemp(prefix='pdfnuppy')
-        print 'Working in', work_dir
-        # Create a symbolic link to the PDF file to include
-        os.symlink(os.path.abspath(input_file), os.path.join(work_dir, 'input.pdf'))
-        # Generate the LaTeX file.
-        tex_file_name = os.path.join(work_dir, 'pdfnuppy.tex')
-        with file(tex_file_name, 'w') as f:
-            latex_code = generate_tex(clioptions)
-            f.write(latex_code)
-            if clioptions.verbose:
-                print latex_code
-
-        # Call pdflatex (run it in the working directory).
-        p = subprocess.Popen(
-            ['pdflatex', '--interaction', 'batchmode', tex_file_name],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            cwd=work_dir,
-            )
-        p.communicate()
-        # Check if the PDF was generated and copy it over to the output file
-        generated_pdf = os.path.join(work_dir, 'pdfnuppy.pdf')
-        if os.path.isfile(generated_pdf):
-            shutil.copyfile(generated_pdf, output_file)
-            print 'Finished: output is', output_file
-        else:
-            print 'Failed: output file was not written'
-
-        # clean up
-        if clioptions.tidy:
-            shutil.rmtree(work_dir)
+        pdfnup(input_file, clioptions)
 
 
 def check_requirements(pdflatex_bin='pdflatex'):
@@ -153,7 +114,7 @@ def build_option_parser():
         action='store_true', dest='booklet', default=False,
         help='Rearrange the pages to make a booklet.',
     )
-    
+
     # Paper options.
     paper_options = optparse.OptionGroup(cliparser, 'Paper options')
     cliparser.add_option_group(paper_options)
@@ -222,7 +183,6 @@ def build_option_parser():
         help='Put an empty page before first page, so that first page is at right hand side.',
     )
 
-
     # Various options
     misc_options = optparse.OptionGroup(cliparser, "Miscellaneous Options")
     cliparser.add_option_group(misc_options)
@@ -260,6 +220,47 @@ def parse_nup(nup):
     return x, y
 
 
+def pdfnup(input_file, clioptions):
+    '''
+    Apply the pdfnup process to a given file.
+
+    @param input_file: the pdf file to use as input.
+    @param clioptions: the command line options.
+    '''
+    # Determine the output file.
+    output_file = clioptions.output_file
+    if output_file == None:
+        output_file = '%s-%s.pdf' % (os.path.splitext(input_file)[0], clioptions.nup)
+    assert output_file != input_file
+    # Create a temp directory for doing the work.
+    work_dir = tempfile.mkdtemp(prefix='pdfnuppy')
+    print 'Working in', work_dir
+    # Create a symbolic link to the PDF file to include
+    os.symlink(os.path.abspath(input_file), os.path.join(work_dir, 'input.pdf'))
+    # Generate the LaTeX file.
+    tex_file_name = os.path.join(work_dir, 'pdfnuppy.tex')
+    with file(tex_file_name, 'w') as f:
+        latex_code = generate_tex(clioptions)
+        f.write(latex_code)
+        if clioptions.verbose:
+            print latex_code
+    # Call pdflatex (run it in the working directory).
+    p = subprocess.Popen(['pdflatex', '--interaction', 'batchmode', tex_file_name],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        cwd=work_dir)
+    p.communicate()
+    # Check if the PDF was generated and copy it over to the output file
+    generated_pdf = os.path.join(work_dir, 'pdfnuppy.pdf')
+    if os.path.isfile(generated_pdf):
+        shutil.copyfile(generated_pdf, output_file)
+        print 'Finished: output is', output_file
+    else:
+        print 'Failed: output file was not written'
+    # Clean up.
+    if clioptions.tidy:
+        shutil.rmtree(work_dir)
+
+
 def generate_tex(clioptions, input_pdf_file='input.pdf'):
     '''
     Generate the LaTeX code for PdfNuppy
@@ -295,7 +296,6 @@ def generate_tex(clioptions, input_pdf_file='input.pdf'):
             'options': options,
             'input_pdf_file': input_pdf_file,
         }
-
 
 
 
