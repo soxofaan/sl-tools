@@ -10,10 +10,10 @@ import sys
 import pprint
 
 def main():
-    print 'os.environ["PATH"] (aka $PATH):'
+    print('os.environ["PATH"] (aka $PATH):')
     pprint.pprint(os.environ['PATH'].split(':'))
 
-    print 'sys.path:'
+    print('sys.path:')
     pprint.pprint(sys.path)
 
 if __name__ == '__main__':
