@@ -11,6 +11,7 @@ and build a histogram from it
 
 import optparse
 import sys
+import operator
 
 
 class ObjectHistogram(dict):
@@ -73,14 +74,14 @@ class ObjectHistogram(dict):
         items.sort(lambda a, b:-cmp(a[1], b[1]))
         return items
 
-    def ascii_plot(self, sorted=True, limit=None, out=sys.stdout):
+    def ascii_plot(self, keysort=False, limit=None, out=sys.stdout):
         '''
         Make a plot in text (ASCII) format.
         '''
-        if sorted:
-            items = self.ordered_items()
+        if keysort:
+            items = sorted(self.items(), key=operator.itemgetter(0), reverse=False)
         else:
-            items = self.iteritems()
+            items = sorted(self.items(), key=operator.itemgetter(1), reverse=True)
         max_count = max(self.values())
         total_count = sum(self.values())
         for obj, count in items[:limit]:
@@ -106,6 +107,11 @@ if __name__ == '__main__':
         dest='limit', type='int', action='store', default=None,
         help='Limit the histogram to a number of entries.',
     )
+    optparser.add_option(
+        '-k', '--keysort',
+        dest='keysort', action='store_true', default=False,
+        help='Sort the entries on their key, instead of frequency.',
+    )
 
     # Get options.
     (options, arguments) = optparser.parse_args()
@@ -117,7 +123,7 @@ if __name__ == '__main__':
 
     histogram.observe_from_sources(arguments, observe_lines=options.observe_lines)
 
-    histogram.ascii_plot(limit=options.limit)
+    histogram.ascii_plot(limit=options.limit, keysort=options.keysort)
 
 
 
