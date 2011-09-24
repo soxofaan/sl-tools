@@ -22,9 +22,13 @@ def main():
     # Handle command line interface
     cliparser = optparse.OptionParser()
     (clioptions, cliargs) = cliparser.parse_args()
+
+    # Determine which files to compare
     if len(cliargs) < 1:
-        cliparser.error('At least one file/directory should be given')
-    file_list = get_file_list(cliargs)
+        seeds = '.'
+    else:
+        seeds = cliargs
+    file_list = get_file_list(seeds)
 
     # Phase 1: group on file size and keep only real groups (two items or more)
     size_groups = group_on_filesize(file_list)
