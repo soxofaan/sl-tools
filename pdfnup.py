@@ -250,9 +250,11 @@ def pdfnup(input_file, clioptions):
     p = subprocess.Popen([clioptions.pdflatex_bin, '--interaction', 'batchmode', tex_file_name],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         cwd=work_dir)
-    p.communicate()
+    (stdout, stderr) = p.communicate()
     # Check if the PDF was successfully generated.
     if p.returncode != 0:
+        print stdout
+        print stderr
         raise RuntimeError('pdflatex returned with error code %d.' % p.returncode)
     generated_pdf = os.path.join(work_dir, 'pdfnuppy.pdf')
     if not os.path.isfile(generated_pdf):
