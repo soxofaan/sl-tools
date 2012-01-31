@@ -5,6 +5,10 @@ Collect text file size stats, like number of lines, average line length,
 maximum line length, number of whitespace lines, ...
 '''
 
+# TODO: add walking through directories (or ignoring directories)
+# TODO: detect and ignore binary files
+# TODO: add option to sort (e.g. on max length)
+
 import sys
 
 
