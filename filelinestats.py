@@ -6,10 +6,11 @@ maximum line length, number of whitespace lines, ...
 '''
 
 # TODO: detect and ignore binary files
-# TODO: add option to sort (e.g. on max length)
 
 import os
+import sys
 import optparse
+from operator import attrgetter
 
 
 def get_lines(filename):
@@ -34,6 +35,15 @@ class FileSizeStat(object):
     max_length = None
     average_length = None
     empty_line_fraction = None
+
+    @staticmethod
+    def get_sort_fields():
+        '''
+        Get attribute that can be used to sort stat entries.
+
+        @return list of attribute names
+        '''
+        return ['line_qty', 'max_length', 'average_length', 'empty_line_fraction']
 
     def __init__(self, filename=None):
         '''
@@ -71,7 +81,28 @@ class FileSizeStat(object):
         return '; '.join(cols)
 
 
+def generate_file_paths(paths, recurse):
+    '''
+    Generator for file paths from a list of file and directory paths
+    (which will be scanned recursively if asked for).
+    '''
+    for path in paths:
+        if os.path.isfile(path):
+            yield path
+        elif os.path.isdir(path):
+            if recurse:
+                for (dirpath, dirnames, filenames) in os.walk(path):
+                    for filename in filenames:
+                        yield os.path.join(dirpath, filename)
+            else:
+                pass
+        else:
+            sys.stderr.write('Warning: ignoring invalid path "%s".\n' % path)
+
+
 def main():
+
+    possible_sort_fields = FileSizeStat.get_sort_fields()
 
     cli_parser = optparse.OptionParser(usage='%prog [options] paths')
     cli_parser.add_option(
@@ -79,22 +110,26 @@ def main():
         dest='recursive', action='store_true', default=False,
         help='Recurse through given directories and process all files, instead of ignoring directories.'
         )
+    cli_parser.add_option(
+        '-s', '--sort',
+        dest='sort_field', action='store', default=None,
+        help='Sort field to sort stats on (possible fields: %s).' % (', '.join(possible_sort_fields))
+        )
 
     (options, paths) = cli_parser.parse_args()
 
-    for path in paths:
-
-        if os.path.isfile(path):
-            # Collect and render stats for single file
-            fss = FileSizeStat(path)
+    if options.sort_field == None:
+        # No sorting: render stats immediately.
+        for path in generate_file_paths(paths, options.recursive):
+            print FileSizeStat(path).render()
+    elif options.sort_field in possible_sort_fields:
+        # Sorting: first collect stats and render after sorting
+        stats = [FileSizeStat(path) for path in generate_file_paths(paths, options.recursive)]
+        stats.sort(key=attrgetter(options.sort_field))
+        for fss in stats:
             print fss.render()
-        elif os.path.isdir(path) and options.recursive:
-            # Recurse through directory.
-            for (dirpath, dirnames, filenames) in os.walk(path):
-                for filename in filenames:
-                    path = os.path.join(dirpath, filename)
-                    fss = FileSizeStat(path)
-                    print fss.render()
+    else:
+        cli_parser.error('Invalid sort field "%s"\n' % options.sort_field)
 
 
 if __name__ == '__main__':
