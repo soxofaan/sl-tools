@@ -30,6 +30,7 @@ class FileSizeStat(object):
     '''
 
     filename = None
+    line_qty = None
     max_length = None
     average_length = None
     empty_line_fraction = None
@@ -41,14 +42,17 @@ class FileSizeStat(object):
         self.filename = filename
 
         lines = get_lines(self.filename)
-        line_lengths = [len(l) for l in lines]
-        if len(line_lengths) > 0:
+        self.line_qty = len(lines)
+        if self.line_qty > 0:
+            line_lengths = [len(l) for l in lines]
             self.max_length = max(line_lengths)
-            self.average_length = float(sum(line_lengths)) / len(lines)
-            self.empty_line_fraction = float(len([l for l in lines if l.strip() == ''])) / len(lines)
+            self.average_length = float(sum(line_lengths)) / self.line_qty
+            self.empty_line_fraction = float(len([l for l in lines if l.strip() == ''])) / self.line_qty
 
     def render(self):
         cols = []
+
+        cols.append('lineqty: {qty:5d}'.format(qty=self.line_qty))
         if self.average_length != None:
             cols.append('avglen: {avg:5.1f}'.format(avg=self.average_length))
         else:
