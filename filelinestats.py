@@ -25,6 +25,16 @@ def get_lines(filename):
     return lines
 
 
+def median(l):
+    '''Calculate median value of a given list.'''
+    l = sorted(l)
+    n = len(l)
+    if n % 2 == 1:
+        return l[(n - 1) / 2]
+    else:
+        return 0.5 * (l[n / 2 - 1] + l[n / 2])
+
+
 class FileSizeStat(object):
     '''
     Simple container for file size stats of a file.
@@ -32,8 +42,10 @@ class FileSizeStat(object):
 
     filename = None
     line_qty = None
+    non_empty_line_qty = None
     max_length = None
     average_length = None
+    median_length = None
     empty_line_fraction = None
 
     @staticmethod
@@ -43,7 +55,7 @@ class FileSizeStat(object):
 
         @return list of attribute names
         '''
-        return ['line_qty', 'max_length', 'average_length', 'empty_line_fraction']
+        return ['line_qty', 'non_empty_line_qty', 'max_length', 'average_length', 'median_length', 'empty_line_fraction']
 
     def __init__(self, filename=None):
         '''
@@ -54,19 +66,29 @@ class FileSizeStat(object):
         lines = get_lines(self.filename)
         self.line_qty = len(lines)
         if self.line_qty > 0:
+            self.non_empty_line_qty = len([l for l in lines if l.strip() != ''])
             line_lengths = [len(l) for l in lines]
             self.max_length = max(line_lengths)
             self.average_length = float(sum(line_lengths)) / self.line_qty
-            self.empty_line_fraction = float(len([l for l in lines if l.strip() == ''])) / self.line_qty
+            self.median_length = median(line_lengths)
+            self.empty_line_fraction = float(self.line_qty - self.non_empty_line_qty) / self.line_qty
 
     def render(self):
         cols = []
 
         cols.append('lineqty: {qty:5d}'.format(qty=self.line_qty))
+        if self.non_empty_line_qty != None:
+            cols.append('nonemptylineqty: {qty:5d}'.format(qty=self.non_empty_line_qty))
+        else:
+            cols.append('nonemptylineqty: nan')
         if self.average_length != None:
             cols.append('avglen: {avg:5.1f}'.format(avg=self.average_length))
         else:
             cols.append('avglen:   nan')
+        if self.median_length != None:
+            cols.append('medianlen: {avg:5.1f}'.format(avg=self.median_length))
+        else:
+            cols.append('medianlen:   nan')
         if self.max_length != None:
             cols.append('maxlen: {max:5d}'.format(max=self.max_length))
         else:
