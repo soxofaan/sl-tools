@@ -7,12 +7,33 @@ def bin(v):
     d = {'0':'000','1':'001','2':'010','3':'011','4':'100','5':'101','6':'110','7':'111','L':''}
     return ''.join([d[x] for x in oct(v)])
 
+def safe_chr(v):
+    '''
+    Convert to ASCII printable char, or space when out of range.
+    '''
+    if 32 <= v <= 126:
+        return chr(v)
+    else:
+        return ' '
+
+def ascii(v):
+    '''
+    Convert to ASCII string
+    '''
+    s = ''
+    while v:
+        s = safe_chr(v % 256) + s
+        v = int(v/256)
+    return s
+
+
 def value_to_row(v):
     return [
         bin(v),
         oct(v),
         str(v),
         hex(v),
+        repr(ascii(v)),
         ]
 
 if __name__ == '__main__':
@@ -20,7 +41,7 @@ if __name__ == '__main__':
 
         # Build a table of rows with numer interpretations.
         rows = []
-        rows.append([arg, 'to bin', 'to oct', 'to dec', 'to hex'])
+        rows.append([arg, 'to bin', 'to oct', 'to dec', 'to hex', 'to char'])
 
         bases = [
             ('bin', 2),
