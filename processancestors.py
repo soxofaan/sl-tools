@@ -4,17 +4,12 @@ import sys
 import os
 import subprocess
 
-def main():
-    # Process id to start from
-    if len(sys.argv) == 1:
-        pid = os.getpid()
-    elif len(sys.argv) == 2:
-        pid = int(sys.argv[1])
-    else:
-        raise ValueError('Zero or one argument expected')
+
+def list_process_ancestors(pid=None, stream=sys.stdout):
+    pid = pid or os.getpid()
 
     # Print header.
-    print("{pid:>8s} {cmd}".format(pid='PID', cmd='CMD'))
+    stream.write("{pid:>8s} {cmd}\n".format(pid='PID', cmd='CMD'))
 
     while pid > 0:
         # Get command an parent process id
@@ -27,11 +22,24 @@ def main():
         ppid, command = stdout.split(None, 1)
         ppid = int(ppid)
 
-        # Show command
-        print("{pid:8d} {cmd}".format(pid=pid, cmd=command))
+        # Show ancestor.
+        stream.write("{pid:8d} {cmd}\n".format(pid=pid, cmd=command))
 
         # Go up the chain
         pid = ppid
+
+
+def main():
+    # Process id to start from
+    if len(sys.argv) == 1:
+        pid = os.getpid()
+    elif len(sys.argv) == 2:
+        pid = int(sys.argv[1])
+    else:
+        raise ValueError('Zero or one argument expected')
+
+    list_process_ancestors(pid)
+
 
 if __name__ == '__main__':
     main()
