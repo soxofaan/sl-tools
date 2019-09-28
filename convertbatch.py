@@ -20,11 +20,9 @@
 Wrapper around ImageMagick convert for easier batch conversion jobs.
 '''
 
+import optparse
 import os
 import sys
-import glob
-import re
-import optparse
 
 __version__ = '0.4'
 
@@ -55,12 +53,12 @@ optparser.add_option(
     help="Output (jpeg/png) quality, from 0 (lowest) to 100 (highest).")
 optparser.add_option(
     "-a", "--convertarg", metavar="STRING",
-    dest="convertargs", action="append", default = [],
+    dest="convertargs", action="append", default=[],
     help='Add additional convert arguments/options (see ImageMagick manual or "convert -h"). The arguments should be enclosed in quotes, to avoid interfering with the argument parsing of this wrapper script. For example: -a "-gamma 1.4" --convertarg "-flip"')
 optparser.add_option(
     "-n", "--dry-run",
     action="store_true", dest="dryrun", default=False,
-    help="Dry run: show what would happen, but don't call convert." )
+    help="Dry run: show what would happen, but don't call convert.")
 optparser.add_option(
     "-u", "--upsizetoo",
     action="store_true", dest="upsizetoo", default=False,
@@ -84,8 +82,8 @@ if len(inputImages) == 0:
     sys.exit()
 
 # process the given options
-size = options.size.split('x',1)
-if len(size)==1:
+size = options.size.split('x', 1)
+if len(size) == 1:
     targetWidth = int(size[0])
     targetHeight = int(size[0])
 else:
@@ -101,7 +99,6 @@ else:
 convertBaseArgv += ['-quality', str(options.quality)]
 for convertarg in options.convertargs:
     convertBaseArgv += convertarg.split()
-
 
 # check if files could be overwritten
 if options.prefix == '' and options.suffix == '':
