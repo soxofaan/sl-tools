@@ -79,7 +79,7 @@ optparser.add_option(
 
 # if no input images are given: show help and exit
 if len(inputImages) == 0:
-    print >>sys.stderr, "Error: no input images given"
+    print("Error: no input images given", file=sys.stderr)
     optparser.print_help()
     sys.exit()
 
@@ -105,9 +105,9 @@ for convertarg in options.convertargs:
 
 # check if files could be overwritten
 if options.prefix == '' and options.suffix == '':
-    print "Warning: the input files will/could be overwritten."
+    print("Warning: the input files will/could be overwritten.")
     if not options.dryrun:
-        print "Proceed? y/[n]"
+        print("Proceed? y/[n]")
         answer = sys.stdin.read(1)
         if answer.lower() != 'y':
             sys.exit()
@@ -116,16 +116,16 @@ if options.prefix == '' and options.suffix == '':
 targetDir = os.path.split(options.prefix)[0]
 if targetDir != '':
     if not os.path.exists(targetDir):
-        print "Warning: the output directory '%s' does not exists." % targetDir
+        print("Warning: the output directory '%s' does not exists." % targetDir)
         if not options.dryrun:
-            print "Create it? y/[n]"
+            print("Create it? y/[n]")
             answer = sys.stdin.read(1)
             if answer.lower() == 'y':
-                os.mkdir(targetDir, 0755)
+                os.mkdir(targetDir, 0o755)
             else:
                 sys.exit()
     elif not os.path.isdir(targetDir):
-        print >>sys.stderr, "Error: '%s' is not a directory" % targetDir
+        print("Error: '%s' is not a directory" % targetDir, file=sys.stderr)
         sys.exit()
 
 # handle extension
@@ -140,9 +140,9 @@ for inputImage in inputImages:
     outputImage = os.path.join(inputImageDir, options.prefix + inputImageFilename + options.suffix + outputImageExt)
     argv = convertBaseArgv + [inputImage, outputImage]
     command = " ".join(argv)
-    print command
+    print(command)
     if not options.dryrun:
         result = os.spawnvp(os.P_WAIT, argv[0], argv)
         if result != 0 and not options.ignoreerrors:
-            print >>sys.stderr, "Error: convert exited with non zero error code"
+            print("Error: convert exited with non zero error code", file=sys.stderr)
             sys.exit()
