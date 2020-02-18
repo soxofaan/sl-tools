@@ -20,7 +20,7 @@ def get_pid_ancestors(pid=None):
         pid = int(ppid)
 
 
-def print_pid_family_tree(pid=None):
+def print_pid_family_tree(pid=None, print=print):
     print('     PID COMMAND')
     for i, (pid, command) in enumerate(reversed(list(get_pid_ancestors(pid)))):
         print('{p:8d} {c}'.format(p=pid, c=command))
