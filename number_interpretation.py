@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 
+import itertools
 import sys
+from typing import List, Iterator
 
 
-def bin(v):
-    """Convert a number to binary notation."""
-    d = {'0': '000', '1': '001', '2': '010', '3': '011', '4': '100', '5': '101', '6': '110', '7': '111', 'L': ''}
-    return ''.join([d[x] for x in oct(v).partition('o')[-1]])
-
-
-def safe_chr(v):
+def safe_chr(v: int):
     """Convert to ASCII printable char, or space when out of range."""
     if 32 <= v <= 126:
         return chr(v)
@@ -17,8 +13,9 @@ def safe_chr(v):
         return ' '
 
 
-def ascii(v):
+def ascii(v: int):
     """Convert to ASCII string"""
+    # TODO: also do UTF8?
     s = ''
     while v:
         s = safe_chr(v % 256) + s
@@ -26,7 +23,7 @@ def ascii(v):
     return s
 
 
-def value_to_row(v):
+def value_to_row(v: int):
     return [
         bin(v),
         oct(v),
@@ -36,36 +33,52 @@ def value_to_row(v):
     ]
 
 
-if __name__ == '__main__':
+def build_table(arg: str) -> List[List[str]]:
+    """Build number interpretation table from given number-like string"""
+    rows = [
+        [arg, 'to bin', 'to oct', 'to dec', 'to hex', 'to char']
+    ]
+
+    bases = [
+        ('bin', 2),
+        ('oct', 8),
+        ('dec', 10),
+        ('hex', 16),
+    ]
+
+    for name, base in bases:
+        try:
+            # Get the value when interpreted for a given base.
+            value = int(arg, base=base)
+            rows.append(['from {n}'.format(n=name)] + value_to_row(value))
+        except ValueError:
+            pass
+
+    return rows
+
+
+def render_row(row: List[str], widths: List[int], sep: str = '|', pad: str = ' ') -> str:
+    return sep + sep.join(pad + c.rjust(w) + pad for c, w in zip(row, widths)) + sep
+
+
+def render_table(rows: List[List[str]]) -> Iterator[str]:
+    # Find width of each column
+    widths = [
+        max(map(len, col))
+        for col in itertools.zip_longest(*rows, fillvalue='')
+    ]
+    yield render_row(rows[0], widths)
+    yield render_row(['-'*w for w in widths], widths, sep='+', pad='-')
+    for row in rows[1:]:
+        yield render_row(row, widths)
+
+
+def main():
     for arg in sys.argv[1:]:
+        table = build_table(arg)
+        print("\n".join(render_table(table)))
+        print()
 
-        # Build a table of rows with numer interpretations.
-        rows = []
-        rows.append([arg, 'to bin', 'to oct', 'to dec', 'to hex', 'to char'])
 
-        bases = [
-            ('bin', 2),
-            ('oct', 8),
-            ('dec', 10),
-            ('hex', 16),
-        ]
-
-        for name, base in bases:
-            try:
-                # Get the value when interpreted for a given base.
-                value = int(arg, base=base)
-                rows.append(['from %s' % name] + value_to_row(value))
-            except ValueError:
-                pass
-
-        # Display rows.
-
-        # Calculate column widths.
-        colq = len(rows[0])
-        widths = [max([len(row[c]) for row in rows]) for c in range(colq)]
-
-        for (r, row) in enumerate(rows):
-            if r == 1:
-                print('+' + '+'.join(['-' * (w + 2) for w in widths]) + '+')
-
-            print('| ' + ' | '.join(row[c].rjust(widths[c]) for c in range(colq)) + ' |')
+if __name__ == '__main__':
+    main()
