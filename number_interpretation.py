@@ -5,7 +5,7 @@ import sys
 def bin(v):
     '''Convert a number to binary notation.'''
     d = {'0':'000','1':'001','2':'010','3':'011','4':'100','5':'101','6':'110','7':'111','L':''}
-    return ''.join([d[x] for x in oct(v)])
+    return ''.join([d[x] for x in oct(v).partition('o')[-1]])
 
 def safe_chr(v):
     '''
@@ -66,10 +66,6 @@ if __name__ == '__main__':
 
         for (r, row) in enumerate(rows):
             if r == 1:
-                print '+' + '+'.join(['-' * (w+2) for w in widths]) + '+'
+                print('+' + '+'.join(['-' * (w+2) for w in widths]) + '+')
 
-            for c in range(colq):
-                print '|', row[c].rjust(widths[c]),
-            print '|'
-
-        print
+            print('| ' + ' | '.join(row[c].rjust(widths[c]) for c in range(colq)) + ' |')
