@@ -1,4 +1,19 @@
 #!/usr/bin/env python
+"""
+
+Decode and re-encode given arguments as numbers
+(trying binary, octal, decimal, hexadecimal representation)
+
+For example:
+
+    $ number_decode.py  123
+    |      123 |    to bin | to oct | to dec | to hex | to latin1 | to utf8 LE | to utf8 BE |
+    +----------+-----------+--------+--------+--------+-----------+------------+------------+
+    | from oct |   1010011 |    123 |     83 |     53 |       'S' |        'S' |        'S' |
+    | from dec |   1111011 |    173 |    123 |     7b |       '{' |        '{' |        '{' |
+    | from hex | 100100011 |    443 |    291 |    123 |   '\x01#' |    '#\x01' |    '\x01#' |
+
+"""
 
 import functools
 import itertools

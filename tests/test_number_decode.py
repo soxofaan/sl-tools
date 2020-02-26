@@ -1,6 +1,6 @@
 import pytest
 
-from number_interpretation import decompose_little_endian, decompose_big_endian, to_latin1, to_utf8_le, to_utf8_be, \
+from number_decode import decompose_little_endian, decompose_big_endian, to_latin1, to_utf8_le, to_utf8_be, \
     build_table
 
 
