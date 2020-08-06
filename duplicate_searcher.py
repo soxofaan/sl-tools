@@ -1,8 +1,7 @@
 #!/usr/bin/env python
-
-'''
+"""
 Tool to search for file duplicates, based on file size and content hash/digest
-'''
+"""
 
 # TODO: add option to control size representation (human readable, kB, kiB, ...)
 # TODO: add option to exclude paths/patterns from recursive directory exploring
@@ -11,23 +10,23 @@ Tool to search for file duplicates, based on file size and content hash/digest
 # TODO: add option to control the size of the content to hash
 # TODO: add logging/verbosity
 
-import sys
-import os
-import optparse
 import hashlib
-import pprint
+import os
+import argparse
+
 
 def main():
-
     # Handle command line interface
-    cliparser = optparse.OptionParser()
-    (clioptions, cliargs) = cliparser.parse_args()
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("path", nargs="*")
+
+    arguments = arg_parser.parse_args()
 
     # Determine which files to compare
-    if len(cliargs) < 1:
+    if len(arguments.path) < 1:
         seeds = '.'
     else:
-        seeds = cliargs
+        seeds = arguments.path
     file_list = get_file_list(seeds)
 
     # Phase 1: group on file size and keep only real groups (two items or more)
@@ -44,22 +43,22 @@ def main():
 
     # Report
     if len(content_groups) > 0:
-        print "Found these possible duplicates:"
+        print("Found these possible duplicates:")
         for (size, hash), group in content_groups.items():
-            print '--- size: {size} B, content hash: {hash} ---'.format(size=size, hash=hash)
+            print('--- size: {size} B, content hash: {hash} ---'.format(size=size, hash=hash))
             for file in group:
-                print file
+                print(file)
     else:
-        print 'No duplicates found'
+        print('No duplicates found')
 
 
 def get_file_list(seeds):
-    '''
+    """
     Build file list based on given seeds: file names
     directory names (which will be explored recursively)
-    
+
     @param seeds list of files or directories
-    '''
+    """
 
     file_list = []
     for seed in seeds:
@@ -77,14 +76,14 @@ def get_file_list(seeds):
 
 
 def remove_small_groups(d, minimum_size=2):
-    '''
+    """
     Get a dictionary of lists and remove entries with small lists.
-    
+
     @param d: dictionary of lists
     @param minimum_size: minimum size a list should have
-    
+
     @return dictionary of lists with length equal or greater than given threshold
-    '''
+    """
     d2 = {}
     for key, data in d.items():
         if len(data) >= minimum_size:
@@ -93,46 +92,45 @@ def remove_small_groups(d, minimum_size=2):
 
 
 def group_on_filesize(filenames):
-    '''
+    """
     Group a list of files on file size.
-    
+
     @param filenames list of file paths
-    
+
     @return dictionary mapping file size to list of files with that file size
-    '''
+    """
     map = {}
     for f in filenames:
         size = os.path.getsize(f)
         map[size] = map.get(size, []) + [f]
     return map
 
+
 def group_on_content_hash(filenames):
-    '''
+    """
     Group a list of files on a hash/digest of their content (MD5)
-    
+
     @param filenames list of file paths
-    
+
     @return dictionary mapping hash to list of files with that hash
-    '''
+    """
     map = {}
     for f in filenames:
         md5 = md5hash(f)
         map[md5] = map.get(md5, []) + [f]
     return map
 
-def md5hash(filename, size=5000):
-    '''
-    Helper function to calculate MD5 hash of the file contents 
-    (up to a given number of bytes).
-    
-    @param filename file path of file to process
-    @param size the maximum number of bytes to read  
-    '''
-    f = open(filename, 'r')
-    data = f.read(size)
-    f.close()
-    return hashlib.md5(data).hexdigest()
 
+def md5hash(filename, size=5000):
+    """
+    Helper function to calculate MD5 hash of the file contents
+    (up to a given number of bytes).
+
+    @param filename file path of file to process
+    @param size the maximum number of bytes to read
+    """
+    with open(filename, 'rb') as f:
+        return hashlib.md5(f.read(size)).hexdigest()
 
 
 if __name__ == '__main__':
