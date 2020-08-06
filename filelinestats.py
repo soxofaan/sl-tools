@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-'''
+"""
 Collect text file size stats, like number of lines, average line length,
 maximum line length, number of whitespace lines, ...
-'''
+"""
 
 # TODO: detect and ignore binary files
 
@@ -55,7 +55,8 @@ class FileSizeStat(object):
 
         @return list of attribute names
         '''
-        return ['line_qty', 'non_empty_line_qty', 'max_length', 'average_length', 'median_length', 'empty_line_fraction']
+        return ['line_qty', 'non_empty_line_qty', 'max_length', 'average_length', 'median_length',
+                'empty_line_fraction']
 
     def __init__(self, filename=None):
         '''
@@ -123,7 +124,6 @@ def generate_file_paths(paths, recurse):
 
 
 def main():
-
     possible_sort_fields = FileSizeStat.get_sort_fields()
 
     cli_parser = optparse.OptionParser(usage='%prog [options] paths')
@@ -131,25 +131,25 @@ def main():
         '-r', '--recursive',
         dest='recursive', action='store_true', default=False,
         help='Recurse through given directories and process all files, instead of ignoring directories.'
-        )
+    )
     cli_parser.add_option(
         '-s', '--sort',
         dest='sort_field', action='store', default=None,
         help='Sort field to sort stats on (possible fields: %s).' % (', '.join(possible_sort_fields))
-        )
+    )
 
     (options, paths) = cli_parser.parse_args()
 
     if options.sort_field == None:
         # No sorting: render stats immediately.
         for path in generate_file_paths(paths, options.recursive):
-            print FileSizeStat(path).render()
+            print(FileSizeStat(path).render())
     elif options.sort_field in possible_sort_fields:
         # Sorting: first collect stats and render after sorting
         stats = [FileSizeStat(path) for path in generate_file_paths(paths, options.recursive)]
         stats.sort(key=attrgetter(options.sort_field))
         for fss in stats:
-            print fss.render()
+            print(fss.render())
     else:
         cli_parser.error('Invalid sort field "%s"\n' % options.sort_field)
 

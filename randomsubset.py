@@ -28,5 +28,5 @@ if __name__ == '__main__':
     # Extract a random subset.
     subset = random.sample(lines, options.number)
 
-    print ''.join(subset)
+    print(''.join(subset))
 

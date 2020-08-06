@@ -26,5 +26,5 @@ if __name__ == '__main__':
     # Shuffle the nuffle.
     random.shuffle(lines)
 
-    print ''.join(lines)
+    print(''.join(lines))
 

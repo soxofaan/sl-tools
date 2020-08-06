@@ -3,4 +3,4 @@
 import sys
 import random
 
-print random.choice(sys.argv[1:])
+print(random.choice(sys.argv[1:]))

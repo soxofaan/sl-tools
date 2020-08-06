@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-'''
+"""
 Prettify (indent) JSON data.
 
 Run modes:
@@ -14,19 +14,19 @@ Run modes:
     # Read from standard input and write to standard output
     json-prettify
 
-'''
+"""
 
 import sys
 import json
 import collections
-import StringIO
+import io
 
 
 def json_prettify(input_src=sys.stdin, output_sink=sys.stdout):
-    '''
+    """
     Read JSON data from file like input_src
     and write prettified/indented JSON to file like output_sink
-    '''
+    """
 
     if isinstance(input_src, str):
         input_src = open(input_src, 'r')
@@ -42,8 +42,8 @@ def json_prettify(input_src=sys.stdin, output_sink=sys.stdout):
 
 
 def test_json_prettify():
-    input_src = StringIO.StringIO('{"x":123,"y":{"a":2,"b":4}}')
-    output_sink = StringIO.StringIO()
+    input_src = io.StringIO('{"x":123,"y":{"a":2,"b":4}}')
+    output_sink = io.StringIO()
 
     json_prettify(input_src, output_sink)
 

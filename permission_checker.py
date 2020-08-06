@@ -82,7 +82,7 @@ class PathPermissions(object):
 		# First make a deep copy of self to work on.
 		p = copy.deepcopy(self)
 		# 777 should probably be 644 for files or 755 for dirs
-		if p.get_st_mode() == 0777:
+		if p.get_st_mode() == 0o777:
 			p.group.w = False
 			p.other.w = False
 			if not p.is_dir:
@@ -113,15 +113,15 @@ def check_permissions(top, fix=False, generate_chmods=False):
 				if fix:
 					try:
 						os.chmod(path, sugg_perm.get_st_mode())
-						print str(orig_perm), 'fixed to', str(sugg_perm), path
+						print(str(orig_perm), 'fixed to', str(sugg_perm), path)
 					except OSError:
-						print 'failed to fix', str(orig_perm), 'to', str(sugg_perm), path
+						print('failed to fix', str(orig_perm), 'to', str(sugg_perm), path)
 
 				else:
 					if generate_chmods:
-						print 'chmod', oct(sugg_perm.get_st_mode()), path
+						print('chmod', oct(sugg_perm.get_st_mode()), path)
 					else:
-						print str(orig_perm), '(suggested: ' + str(sugg_perm) +')', path
+						print(str(orig_perm), '(suggested: ' + str(sugg_perm) +')', path)
 
 
 if __name__ == '__main__':

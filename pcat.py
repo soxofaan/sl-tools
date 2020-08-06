@@ -9,7 +9,7 @@ for fileName in sys.argv[1:]:
     while True:
         try:
             obj = unpickler.load()
-            print obj
+            print(obj)
         except EOFError:
             f.close()
             break

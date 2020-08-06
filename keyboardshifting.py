@@ -64,7 +64,7 @@ class Keyboard(object):
 
         for word in words:
             if verbosity == True:
-                print word, '\r',
+                print(word, '\r', end=' ')
             for shift in shifts:
                 try:
                     result = self.translate(word, shift)
@@ -73,7 +73,7 @@ class Keyboard(object):
                 if result in words:
                     hits.append((word, shift, result))
                     if verbosity:
-                        print word, shift, result
+                        print(word, shift, result)
         return hits
 
 
@@ -118,7 +118,7 @@ if __name__ == '__main__':
         '-k', '--layout',
         metavar='LAYOUT',
         dest="keyboard_layout", default='querty',
-        help="The keyboard layout to use (options: %s)." % (', '.join(Keyboard._layouts.keys()))
+        help="The keyboard layout to use (options: %s)." % (', '.join(list(Keyboard._layouts.keys())))
     )
     # Get options.
     (options, arguments) = optparser.parse_args()

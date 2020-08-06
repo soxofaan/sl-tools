@@ -11,7 +11,7 @@ def main():
     for name in dir(platform):
         if not name.startswith('_'):
             try:
-                print "%s(): %s" % (name, platform.__dict__[name]())
+                print("%s(): %s" % (name, platform.__dict__[name]()))
             except TypeError:
                 pass
 

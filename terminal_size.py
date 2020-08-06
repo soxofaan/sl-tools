@@ -26,4 +26,4 @@ def terminal_size():
     return height, width
 
 if __name__ == '__main__':
-    print terminal_size()
+    print(terminal_size())

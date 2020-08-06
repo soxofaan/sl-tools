@@ -47,7 +47,7 @@ def main():
             clioptions.fitpaper = True
 
     for input_file in cliargs:
-        print 'Processing', input_file
+        print('Processing', input_file)
         pdfnup(input_file, clioptions)
 
 
@@ -236,7 +236,7 @@ def pdfnup(input_file, clioptions):
     assert not os.path.isdir(output_file)
     # Create a temp directory for doing the work.
     work_dir = tempfile.mkdtemp(prefix='pdfnuppy')
-    print 'Working in', work_dir
+    print('Working in', work_dir)
     # Create a symbolic link to the PDF file to include
     os.symlink(os.path.abspath(input_file), os.path.join(work_dir, 'input.pdf'))
     # Generate the LaTeX file.
@@ -245,7 +245,7 @@ def pdfnup(input_file, clioptions):
         latex_code = generate_tex(clioptions)
         f.write(latex_code)
         if clioptions.verbose:
-            print latex_code
+            print(latex_code)
     # Call pdflatex (run it in the working directory).
     p = subprocess.Popen([clioptions.pdflatex_bin, '--interaction', 'batchmode', tex_file_name],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -253,15 +253,15 @@ def pdfnup(input_file, clioptions):
     (stdout, stderr) = p.communicate()
     # Check if the PDF was successfully generated.
     if p.returncode != 0:
-        print stdout
-        print stderr
+        print(stdout)
+        print(stderr)
         raise RuntimeError('pdflatex returned with error code %d.' % p.returncode)
     generated_pdf = os.path.join(work_dir, 'pdfnuppy.pdf')
     if not os.path.isfile(generated_pdf):
         raise Exception('Output file was not written')
     # Copy the generated PDF file to the desired output file
     shutil.copyfile(generated_pdf, output_file)
-    print 'Finished: output is', output_file
+    print('Finished: output is', output_file)
 
     # Clean up.
     if clioptions.tidy:
@@ -309,7 +309,7 @@ def generate_tex(clioptions, input_pdf_file='input.pdf'):
 if __name__ == '__main__':
     try:
         main()
-    except Exception, e:
-        print >> sys.stderr, 'Error:', e
+    except Exception as e:
+        print('Error:', e, file=sys.stderr)
 
 
