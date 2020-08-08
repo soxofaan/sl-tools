@@ -4,7 +4,7 @@ import sys
 import pickle
 
 for fileName in sys.argv[1:]:
-    f = file(fileName, "r")
+    f = open(fileName, "r")
     unpickler = pickle.Unpickler(f)
     while True:
         try:
