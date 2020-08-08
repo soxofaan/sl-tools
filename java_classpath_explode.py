@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-
-'''
+"""
 Small tool to show a readable version of the Java class path environment
 variable.
-'''
+"""
 
 import sys
 import os

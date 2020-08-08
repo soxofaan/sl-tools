@@ -9,9 +9,9 @@ Observe data from the standard input (words, lines, numerical data)
 and build a histogram from it
 """
 
-import optparse
-import sys
+import argparse
 import operator
+import sys
 
 
 class ObjectHistogram(dict):
@@ -91,34 +91,30 @@ class ObjectHistogram(dict):
 
 if __name__ == '__main__':
 
-    optparser = optparse.OptionParser(
-        usage="usage: %s [options] [files]",
+    arg_parser = argparse.ArgumentParser(
         description='Observe data and build a histogram.')
-
-    optparser.add_option(
+    arg_parser.add_argument("path", nargs="*", help="File path.")
+    arg_parser.add_argument(
         '-L', '--lines',
         dest='observe_lines', action='store_true', default=False,
         help='Observe lines instead of words.',
     )
-    optparser.add_option(
+    arg_parser.add_argument(
         '-n', '--limit', metavar='N',
-        dest='limit', type='int', action='store', default=None,
+        dest='limit', type=int, action='store', default=None,
         help='Limit the histogram to a number of entries.',
     )
-    optparser.add_option(
+    arg_parser.add_argument(
         '-k', '--keysort',
         dest='keysort', action='store_true', default=False,
         help='Sort the entries on their key, instead of frequency.',
     )
 
-    # Get options.
-    (options, arguments) = optparser.parse_args()
+    arguments = arg_parser.parse_args()
+    paths = list(arguments.path) if arguments.path else [sys.stdin]
 
     histogram = ObjectHistogram()
 
-    if len(arguments) == 0:
-        arguments = [sys.stdin]
+    histogram.observe_from_sources(paths, observe_lines=arguments.observe_lines)
 
-    histogram.observe_from_sources(arguments, observe_lines=options.observe_lines)
-
-    histogram.ascii_plot(limit=options.limit, keysort=options.keysort)
+    histogram.ascii_plot(limit=arguments.limit, keysort=arguments.keysort)
