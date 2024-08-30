@@ -2,18 +2,23 @@
 """
 Collect stats about inotify instances and watches per process.
 
-Inspired by and based on 
+Inspired by and based on
 - https://unix.stackexchange.com/questions/15509/whos-consuming-my-inotify-resources
 - https://github.com/fatso83/dotfiles/blob/master/utils/scripts/inotify-consumers
 """
 
-import re
 import collections
-from pathlib import Path
+import re
+import subprocess
 import sys
+from pathlib import Path
 
 
 def main():
+    # Show current limits
+    subprocess.call(["sysctl", "fs.inotify"])
+
+    # Collect stats
     watch_regex = re.compile(r"^inotify\s", flags=re.MULTILINE)
     instances_per_pid = collections.Counter()
     watches_per_pid = collections.Counter()
@@ -27,6 +32,7 @@ def main():
             instances_per_pid[pid] += 1
             watches_per_pid[pid] += watches
 
+    # Visualize
     print("    PID Instances  Watches Command")
     for pid, watches in watches_per_pid.most_common(n=None):
         cmd = Path(f"/proc/{pid}/cmdline").read_text().split()[0][:60]
