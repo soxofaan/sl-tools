@@ -35,7 +35,8 @@ def main():
     # Visualize
     print("    PID Instances  Watches Command")
     for pid, watches in watches_per_pid.most_common(n=None):
-        cmd = Path(f"/proc/{pid}/cmdline").read_text().split()[0][:60]
+        cmdline = Path(f"/proc/{pid}/cmdline").read_text().split("\x00")[0]
+        cmd = cmdline.split()[0]
         print(f"{pid:8} {instances_per_pid[pid]:8} {watches:8} {cmd}")
     print(
         f"   Total {sum(instances_per_pid.values()):8} {sum(watches_per_pid.values()):8}"
